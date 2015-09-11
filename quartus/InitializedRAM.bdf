@@ -369,7 +369,7 @@ agreement for further details.
 	)
 	(parameter
 		"INIT_FILE"
-		"\"TestWritePort.hex\""
+		"\"TestProgram.hex\""
 		"File containing initial contents of memory"
 	)
 	(parameter
