@@ -1,0 +1,29 @@
+0000        ; example for small loop and subroutines
+0000        START:
+0000 21         X=  1         ; push loop counter to stack and label the stack position (=0)
+0001        LOOP:
+0001 40          GET X         ; loop condition     
+0002 24 36        100
+0004 1D            LT
+0005 B0 0D        JZ END
+0007 40          GET X
+0008 D0 10        JSR WORK     ; do some real action
+000A 02          INC
+000B A0 01       JMP LOOP
+000D        END:
+000D 10          POP
+000E A0 00      JMP START
+0010
+0010        SUBROUTINE WORK X :
+0010 21 31       17
+0012 D0 17        JSR SWAP
+0014 10           POP
+0015 10          POP
+0016 E0         RET
+0016
+0016        SUBROUTINE SWAP A B : A B
+0017 41           GET A
+0018 41            GET B
+0019 52             SET A
+0020 50  	       SET B
+0021 E0           RET

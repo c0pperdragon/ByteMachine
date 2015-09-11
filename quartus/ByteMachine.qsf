@@ -39,7 +39,7 @@
 
 set_global_assignment -name FAMILY "Cyclone V"
 set_global_assignment -name DEVICE 5CGXFC5C6F27C7
-set_global_assignment -name TOP_LEVEL_ENTITY ByteMachine
+set_global_assignment -name TOP_LEVEL_ENTITY ByteSystem
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 15.0.2
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "18:42:33  SEPTEMBER 02, 2015"
 set_global_assignment -name LAST_QUARTUS_VERSION 15.0.2
@@ -51,18 +51,30 @@ set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (VHDL)"
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT VHDL -section_id eda_simulation
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "2.5 V"
+set_global_assignment -name MUX_RESTRUCTURE AUTO
+set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
+set_global_assignment -name SMART_RECOMPILE ON
+set_global_assignment -name HEX_FILE TestWritePort.hex
+set_global_assignment -name HEX_FILE TestProgram.hex
 set_global_assignment -name VHDL_FILE ByteStack.vhd
 set_global_assignment -name VHDL_FILE Globals.vhd
 set_global_assignment -name VHDL_FILE ByteRAM.vhd
 set_global_assignment -name VECTOR_WAVEFORM_FILE ByteRAM.vwf
 set_global_assignment -name VHDL_FILE ByteALU.vhd
 set_global_assignment -name VHDL_FILE ByteMachine.vhd
+set_global_assignment -name SDC_FILE ByteMachine.sdc
+set_global_assignment -name BDF_FILE ByteSystem.bdf
+set_global_assignment -name VECTOR_WAVEFORM_FILE ByteSystem.vwf
+set_global_assignment -name VHDL_FILE AddressStack.vhd
+set_global_assignment -name BDF_FILE InitializedRAM.bdf
+set_global_assignment -name VHDL_FILE ByteSerializer.vhd
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_global_assignment -name VECTOR_WAVEFORM_FILE ByteMachine.vwf
-set_global_assignment -name VECTOR_WAVEFORM_FILE ByteMachine_PushAndPop.vwf
-set_global_assignment -name VECTOR_WAVEFORM_FILE ByteMachine_SetGet.vwf
-set_global_assignment -name VECTOR_WAVEFORM_FILE ByteMachine.LoadStorevwf.vwf
-set_global_assignment -name VECTOR_WAVEFORM_FILE ByteMachine.Branches.vwf
+set_location_assignment PIN_R20 -to clk
+set_location_assignment PIN_L9 -to tx
+set_global_assignment -name CDF_FILE Programmer.cdf
+set_location_assignment PIN_P11 -to reset
+set_location_assignment PIN_M9 -to rx
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

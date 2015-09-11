@@ -1,0 +1,1 @@
+create_clock -name clk50 -period 6 clk
