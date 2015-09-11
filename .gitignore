@@ -3,3 +3,4 @@
 */output_files/*
 */simulation/*
 *.bak
+/bin/

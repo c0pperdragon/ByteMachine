@@ -1,0 +1,22 @@
+; example to write to output port
+
+START:
+	PUSH HELLO      ; LOCAL 0
+LOOP:
+    GET 0
+     LOAD 0
+     DUP
+      JZ END
+     WRITE 0
+	GET 0
+     INC
+	 SET 0
+    JMP LOOP
+END:
+     POP
+    POP
+OVER:
+    JMP OVER
+
+HELLO:
+	DATA "Hello World!" 0
