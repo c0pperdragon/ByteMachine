@@ -2,16 +2,14 @@
 library ieee;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use std.textio.all;
-use work.Globals.all;
 
 entity ByteSerializer is
-	generic ( clockdivider : integer := 1 );    -- 9600 baud on 50Mhz
+	generic ( clockdivider : integer := 5208 );    -- 9600 baud on 50Mhz
 
 	port (
 		clk: in std_logic;		
 		
-		outdata : in byte; 
+		outdata : in unsigned(7 downto 0); 
 		outwe : in std_logic;
 		outrdy : out std_logic;
 		

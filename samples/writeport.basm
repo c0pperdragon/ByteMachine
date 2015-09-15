@@ -10,7 +10,7 @@ LOOP:
      WRITE 0
 	GET 0
      INC
-	 SET 0
+	-SET 0
     JMP LOOP
 END:
      POP

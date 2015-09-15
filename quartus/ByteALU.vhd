@@ -22,7 +22,7 @@ end entity;
 architecture immediate of ByteALU is
 begin		
 	process (operation,a,b)				
-	variable tmp : unsigned (15 downto 0);
+	variable tmp : unsigned (8 downto 0);
 	begin					
 		-- compute results of unary operations
 		case operation is
@@ -36,16 +36,19 @@ begin
 				op1 <= 0-b;
 			when operation1_double =>
 				op1 <= b+b;
-			when operation1_not =>
+			when operation1_inv =>
 				op1 <= not b;
-			when operation1_bnot =>
+			when operation1_not =>
 				if b="00000000" then
 					op1 <= "00000001";
 				else
 					op1 <= "00000000";
 				end if;
+			when operation1_negate =>
+				op1 <= unsigned(-signed(b));
+								
 			when others => 
-				op1 <= "00000000";
+				op1 <= b;
 		end case;
 	
 		-- compute results of binary operation
@@ -56,16 +59,12 @@ begin
 				op2 <= a+b;
 			when operation2_sub => 	
 				op2 <= a-b;
-			when operation2_mul => 	
-				tmp := a*b;
-				op2 <= tmp(7 downto 0);
-				op2 <= "00000000";    -- disable mul
-			when operation2_sll =>
-				op2 <= a sll to_integer(unsigned(b));
-			when operation2_srl =>
-				op2 <= a srl to_integer(unsigned(b));				
---			when operation_sra =>
---				x <= a sra to_integer(signed(b));
+			when operation2_lsl =>
+				op2 <= shift_left(a,to_integer(b));
+			when operation2_lsr =>
+				op2 <= shift_right(a,to_integer(b));
+			when operation2_asr =>
+				op2 <= unsigned(shift_right(signed(a), to_integer(b)));
 			when operation2_and =>
 				op2 <= a and b;
 			when operation2_or =>
@@ -90,9 +89,32 @@ begin
 				else	
 					op2 <= "00000000";
 				end if;
-				
-			when others =>
+			when operation2_lts =>
+				if signed(a)<signed(b) then
+					op2 <= "00000001";
+				else	
+					op2 <= "00000000";
+				end if;
+			when operation2_gts =>
+				if signed(a)>signed(b) then
+					op2 <= "00000001";
+				else	
+					op2 <= "00000000";
+				end if;
+
+			when operation2_carries =>
+				tmp:=(others=>'0');
+				tmp(7 downto 0) := a;
+				tmp := tmp + b;
 				op2 <= "00000000";
+				op2(0) <= tmp(8);
+			when operation2_borrows =>
+				tmp:=(others=>'0');
+				tmp(7 downto 0) := a;
+				tmp := tmp - b;
+				op2 <= "00000000";
+				op2(0) <= tmp(8);
+				
 		end case;
 	end process;
 end immediate;

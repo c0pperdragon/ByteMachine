@@ -10,7 +10,7 @@ import java.util.HashMap;
 public class ByteASM 
 {
 	public static void main(String[] args) throws IOException
-	{		
+	{			
 		String srcfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/writeport.basm";		
 		String dstfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/quartus/TestProgram.hex";
 
@@ -25,9 +25,6 @@ public class ByteASM
 	private static String[] binaryoperations = { 
 		"POP", "ADD", "SUB", "LSL", "LSR", "ASR","AND","OR","XOR","EQ","LT","GT","LTS","GTS","CARRIES","BORROWS" 
 	};	 
-	private static String[] parameterizedoperations = 
-	{	"GET", "SET", "READ", "WRITE"
-	};	
 	private static String[] memoryoperations =
 	{	"LOAD", "STORE", "LOADX", "STOREX" 
 	}; 	
@@ -103,6 +100,15 @@ public class ByteASM
 		if (operation==null || operation.length()<1)
 		{	return new byte[0];
 		}
+		
+		// trim away leading "-", because these are only a hint, how deep the stack currently is
+		// and memorize the number of minuses
+		int stackdepth=0;
+		while (operation.startsWith("-"))
+		{	stackdepth++;
+			operation = operation.substring(1);
+		}
+		
 		for (int i=0; i<unaryoperations.length; i++)
 		{
 			if (operation.equals(unaryoperations[i]))
@@ -132,24 +138,31 @@ public class ByteASM
 		if (operation.equals("DUP"))        // a short form for GET 0
 		{	return new byte[] { (byte) 0x40 };		
 		}
-		for (int i=0; i<parameterizedoperations.length; i++)
-		{
-			if (operation.equals(parameterizedoperations[i]))
-			{	return new byte[] { (byte) (((0x4+i)<<4) | (resolveInt(parameter)&0x0f)) };
-			}		
+		if (operation.equals("GET"))
+		{	return new byte[]{ (byte) ( 0x40 | ((resolveInt(parameter)+stackdepth)&0x0f) ) };		
+		}
+		if (operation.equals("SET"))
+		{	if (stackdepth<1) stackdepth=1;
+			return new byte[]{ (byte) ( 0x50 | ((resolveInt(parameter)+stackdepth-1)&0x0f) ) };		
+		}
+		if (operation.equals("READ"))
+		{	return new byte[] { (byte) (0x60 | (resolveInt(parameter)&0x0f)) };
+		}
+		if (operation.equals("WRITE"))
+		{	return new byte[] { (byte) (0x70 | (resolveInt(parameter)&0x0f)) };
 		}
 		for (int i=0; i<memoryoperations.length; i++)
 		{
 			if (operation.equals(memoryoperations[i]))
 			{	int target = resolveIdentifier(parameter, labels);
-				return new byte[] { (byte) (((0x8+i)<<4) + ((target>>8)&0x0f)), (byte) (target & 0xff) };
+				return new byte[] { (byte) (((0x8+i)<<4) + (target&0x0f)), (byte) ((target>>4) & 0xff) };
 			}		
 		}
 		for (int i=0; i<jumpoperations.length; i++)
 		{
 			if (operation.equals(jumpoperations[i]))
 			{	int target = resolveIdentifier(parameter, labels);
-				return new byte[] { (byte) (((0xA+i)<<4) + ((target>>8)&0x0f)), (byte) (target & 0xff) };
+				return new byte[] { (byte) (((0xC+i)<<4) + (target&0x0f)), (byte) ((target>>4) & 0xff) };
 			}		
 		}
 		if (operation.equals("DATA"))
