@@ -7,16 +7,53 @@
 library ieee;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use work.Globals.all;
 
 entity ByteALU is	
 	port (
-		operation: in nibble;
-		a: in byte;	
-		b: in byte;	
-		op1: out byte;
-		op2: out byte
+		operation: in unsigned (3 downto 0);
+		a: in unsigned (7 downto 0);	
+		b: in unsigned (7 downto 0);	
+		op1: out unsigned(7 downto 0);
+		op2: out unsigned(7 downto 0)
 	);
+	
+	-- unary operations 
+	constant operation1_nop    : unsigned(3 downto 0) := "0000";   -- $0	unchanged
+	-- arithmetic
+	constant operation1_inc    : unsigned(3 downto 0) := "0001";   -- $1
+	constant operation1_dec    : unsigned(3 downto 0) := "0010";   -- $2
+	constant operation1_neg    : unsigned(3 downto 0) := "0011";   -- $3
+	constant operation1_double : unsigned(3 downto 0) := "0100";   -- $4
+	-- bit-logic and boolean
+	constant operation1_inv    : unsigned(3 downto 0) := "0101";   -- $5
+	constant operation1_not    : unsigned(3 downto 0) := "0110";   -- $6
+	constant operation1_negate : unsigned(3 downto 0) := "0111";   -- $7
+	
+	constant operation1_ret    : unsigned(3 downto 0) := "1111";   -- $F pop top address from return stack and jump there
+																			
+	-- binary operations 
+	constant operation2_a      : unsigned(3 downto 0) := "0000";   -- $0
+	-- arithmetic
+	constant operation2_add    : unsigned(3 downto 0) := "0001";   -- $1
+	constant operation2_sub    : unsigned(3 downto 0) := "0010";   -- $2
+	-- shifting     (first operand will be shifted by second operands signed value)	
+	constant operation2_lsl    : unsigned(3 downto 0) := "0011";   -- $3
+	constant operation2_lsr    : unsigned(3 downto 0) := "0100";   -- $4
+	constant operation2_asr    : unsigned(3 downto 0) := "0101";   -- $5
+	-- bits-logic and boolean
+	constant operation2_and    : unsigned(3 downto 0) := "0110";   -- $6
+	constant operation2_or     : unsigned(3 downto 0) := "0111";   -- $7
+	constant operation2_xor    : unsigned(3 downto 0) := "1000";   -- $8
+	-- comparisions
+	constant operation2_eq     : unsigned(3 downto 0) := "1001";   -- $9
+	constant operation2_lt     : unsigned(3 downto 0) := "1010";   -- $A
+	constant operation2_gt     : unsigned(3 downto 0) := "1011";   -- $B
+	constant operation2_lts    : unsigned(3 downto 0) := "1100";   -- $C
+	constant operation2_gts    : unsigned(3 downto 0) := "1101";   -- $D
+	-- carry computation (replaces use of a carry flag)
+	constant operation2_carries: unsigned(3 downto 0) := "1110";   -- $E
+	constant operation2_borrows: unsigned(3 downto 0) := "1111";   -- $F
+	
 end entity;
 
 architecture immediate of ByteALU is
@@ -45,10 +82,9 @@ begin
 					op1 <= "00000000";
 				end if;
 			when operation1_negate =>
-				op1 <= unsigned(-signed(b));
-								
+				op1 <= unsigned(-signed(b));							
 			when others => 
-				op1 <= b;
+				op1 <= b;				
 		end case;
 	
 		-- compute results of binary operation

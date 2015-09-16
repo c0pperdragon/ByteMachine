@@ -21,9 +21,9 @@ agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 192 128)
+	(rect 16 16 200 192)
 	(text "ByteSerializer" (rect 5 0 58 12)(font "Arial" ))
-	(text "inst" (rect 8 96 20 108)(font "Arial" ))
+	(text "inst" (rect 8 160 20 172)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -34,38 +34,73 @@ agreement for further details.
 	(port
 		(pt 0 48)
 		(input)
-		(text "outdata[7..0]" (rect 0 0 48 12)(font "Arial" ))
-		(text "outdata[7..0]" (rect 21 43 69 55)(font "Arial" ))
-		(line (pt 0 48)(pt 16 48)(line_width 3))
+		(text "reset" (rect 0 0 20 12)(font "Arial" ))
+		(text "reset" (rect 21 43 41 55)(font "Arial" ))
+		(line (pt 0 48)(pt 16 48)(line_width 1))
 	)
 	(port
 		(pt 0 64)
 		(input)
-		(text "outwe" (rect 0 0 22 12)(font "Arial" ))
-		(text "outwe" (rect 21 59 43 71)(font "Arial" ))
-		(line (pt 0 64)(pt 16 64)(line_width 1))
+		(text "adr_i[3..0]" (rect 0 0 40 12)(font "Arial" ))
+		(text "adr_i[3..0]" (rect 21 59 61 71)(font "Arial" ))
+		(line (pt 0 64)(pt 16 64)(line_width 3))
 	)
 	(port
-		(pt 176 32)
+		(pt 0 80)
+		(input)
+		(text "dat_i[7..0]" (rect 0 0 38 12)(font "Arial" ))
+		(text "dat_i[7..0]" (rect 21 75 59 87)(font "Arial" ))
+		(line (pt 0 80)(pt 16 80)(line_width 3))
+	)
+	(port
+		(pt 0 96)
+		(input)
+		(text "we_i" (rect 0 0 17 12)(font "Arial" ))
+		(text "we_i" (rect 21 91 38 103)(font "Arial" ))
+		(line (pt 0 96)(pt 16 96)(line_width 1))
+	)
+	(port
+		(pt 0 112)
+		(input)
+		(text "cyc_i" (rect 0 0 22 12)(font "Arial" ))
+		(text "cyc_i" (rect 21 107 43 119)(font "Arial" ))
+		(line (pt 0 112)(pt 16 112)(line_width 1))
+	)
+	(port
+		(pt 0 128)
+		(input)
+		(text "stb_i" (rect 0 0 18 12)(font "Arial" ))
+		(text "stb_i" (rect 21 123 39 135)(font "Arial" ))
+		(line (pt 0 128)(pt 16 128)(line_width 1))
+	)
+	(port
+		(pt 184 32)
 		(output)
-		(text "outrdy" (rect 0 0 25 12)(font "Arial" ))
-		(text "outrdy" (rect 130 27 155 39)(font "Arial" ))
-		(line (pt 176 32)(pt 160 32)(line_width 1))
+		(text "ack_o" (rect 0 0 24 12)(font "Arial" ))
+		(text "ack_o" (rect 139 27 163 39)(font "Arial" ))
+		(line (pt 184 32)(pt 168 32)(line_width 1))
 	)
 	(port
-		(pt 176 48)
+		(pt 184 48)
+		(output)
+		(text "dat_o[7..0]" (rect 0 0 42 12)(font "Arial" ))
+		(text "dat_o[7..0]" (rect 121 43 163 55)(font "Arial" ))
+		(line (pt 184 48)(pt 168 48)(line_width 3))
+	)
+	(port
+		(pt 184 64)
 		(output)
 		(text "tx" (rect 0 0 7 12)(font "Arial" ))
-		(text "tx" (rect 148 43 155 55)(font "Arial" ))
-		(line (pt 176 48)(pt 160 48)(line_width 1))
+		(text "tx" (rect 156 59 163 71)(font "Arial" ))
+		(line (pt 184 64)(pt 168 64)(line_width 1))
 	)
 	(parameter
 		"clockdivider"
-		"1"
+		"5208"
 		""
 		(type "PARAMETER_SIGNED_DEC")	)
 	(drawing
-		(rectangle (rect 16 16 160 96)(line_width 1))
+		(rectangle (rect 16 16 168 160)(line_width 1))
 	)
-	(annotation_block (parameter)(rect 192 -64 292 16))
+	(annotation_block (parameter)(rect 200 -64 300 16))
 )
