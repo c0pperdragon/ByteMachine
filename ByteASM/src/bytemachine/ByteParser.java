@@ -76,6 +76,7 @@ public class ByteParser
 		
 		// check if there is a parameter
 		idx = l.indexOf(' ');
+		if (idx<0) idx = l.indexOf('\t');
 		if (idx>=0)
 		{
 			currentOperation = l.substring(0,idx).trim();

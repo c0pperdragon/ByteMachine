@@ -1,105 +1,105 @@
 The instruction set of the ByteMachine describes a stack machine with byte operands.
 Most instructions take operands from the stack and push the result back. 
-The top element of the stack is named element(0), the element below is element(1) and so on. 
-The CPU fetches instructions from a RAM which can also be used to store data. A unified 
-12-bit address space is available for both code and data.
-The operand stack and an independent return address stack is located directly inside the CPU 
-and can not be accessed with memory commands.  
+The top element of the stack is named operand(0), the element below is operand(1) and so on. 
+There is only a limited space for operands on the stack (depends on the CPU parameters) 
+and when the bottom-most element is pushed down, it is discarded. A subsequent pop will 
+create a 0 on the bottom of the stack.
+The CPU fetches instructions from a dedicated read-only instruction memory with an address
+width of 12 bit (4096 bytes maximum). A dedicated 256 byte read-write memory (CPUs can
+implement smaller values also) can be used to store arbitrary data.
+Additionally, there is an extra space for an address stack for the return addresses of
+subroutine calls. Like the operand stack, the size of this stack can be individually 
+set by CPU parameters.
 
-Machine instructions are either one-byte (for most computations) or two-byte (for jumps and ram access).
+Machine instructions are either one-byte (for most computations) or two-byte (for jumps and ROM access).
 The type of the instruction is defined by the higher 4 bits of the first byte:
 
-    0o  Unary operation
-        Uses element0 to perform an operation and overwrites it with the result
+    0o  Unary operations
+        Uses operand(0) to perform an operation and overwrites it with the result
         00  NOP      Result is equal to the input 
-        01  INC      Increases element(0) by 1
-        02  DEC      Decreases element(0) by 1
+        01  INC      Increases by 1
+        02  DEC      Decreases by 1
         03  NEG      Computes negative value for a number considered as a signed 8-bit value
-        04  DOUBLE   Adds element(0) to itself
-        05  INV      Inverts all bits of element(0)
-        06  NOT      Boolean not - the result is 1 if the input was 0, otherwise result is 0.
-        07  NEGATIVE Test, if operand is negative when treated as signed byte. Result=1 if negative, 0 otherwise. 
-        08  unused
+        04  LSL1     Shift left by one bit
+        05  LSR1     Logical shift right by one bit
+        06  ASL1     Arithmetical shift right by one bit
+        07  INV      Inverts all bits
+	08  NOT      1 when value=0, 0 otherwise    (boolean not)
         09  unused
         0A  unused
         0B  unused
         0C  unused
         0D  unused
         0E  unused
-        0F  RET     Squeezed in here because no space was free otherwise. Will not change the
-                    operand stack at all, but performs a return jump (see JSR for details).
+        0F  unused
 
-    1o  Binary operation
-        Perform an operation with the top two stack elements, pops them off the stack and pushes the
+    1o  Binary operations
+        Perform an operation with the top two stack operands, pops them off the stack and pushes the
         result on top.
-        10  POP     result = element(1)
-        11  ADD     result = element(1) + element(0)
-        12  SUB     result = element(1) - element(0)
-        13  LSL     result = element(1) << element(0)
-        14  LSR     result = element(1) >>> element(0)
-        15  ASR     result = element(1) >> element(0)
-        16  AND     result = element(1) & element(0)
-        17  OR      result = element(1) | element(0)
-        18  XOR     result = element(1) | element(0)
-        19  EQ      result = element(1)==element(0) ? 1:0
-        1A  LT      result = element(1)<element(0) ? 1:0
-        1B  GT      result = element(1)>element(0) ? 1:0
-        1C  LTS     result = element(1)<element(0) ? 1:0  - considers operands as signed
-        1D  GTS     result = element(1)>element(0) ? 1:0  - considers operands as signed
-        1E  CARRIES result = 1 when element(1) + element(0) causes an overflow on add, 0 otherwise
-        1F  BORROWS result = 1 when element(1) - element(0) causes an underflow on sub, 0 otherwise
+        10  POP     result = operand(1)
+        11  ADD     result = operand(1) + operand(0)
+        12  SUB     result = operand(1) - operand(0)
+        13  LSL     result = operand(1) << operand(0)
+        14  LSR     result = operand(1) >>> operand(0)
+        15  ASR     result = operand(1) >> operand(0)
+        16  AND     result = operand(1) & operand(0)
+        17  OR      result = operand(1) | operand(0)
+        18  XOR     result = operand(1) ^ operand(0)
+        19  EQ      result = 1 when operand(1)==operand(0) , 0 otherwise
+        1A  LT      result = 1 when operand(1)<operand(0)  , 0 otherwise
+        1B  GT      result = 1 when operand(1)>operand(0)  , 0 otherwise
+        1C  LTS     result = 1 when operand(1)<operand(0)  , 0 otherwise  (signed comparision)
+        1D  GTS     result = 1 when operand(1)>operand(0)  , 0 otherwise  (signed comparision)
+        1E  CARRY   result = 1 when operand(1) + operand(0) will cause an overflow on add, 0 otherwise
+        1F  unused
                          
     2p  PUSH p    
-        Uses p as an unsigned value and pushes a byte with the value on top of the stack            
+        Uses p as an unsigned 4-bit value and pushes a byte with the value on top of the stack            
       
     3p  Add high bits   (has no assembler representation, but will be created automatically) 
-        Uses p as high 4 bits which then replace the 4 high bits of element(0).
+        Uses p as high 4 bits which then replaces the 4 high bits of operand(0).
         This instruction will normally be used in conjunction with PUSH to bring a full 
         byte to the operand stack.
         
     4p  GET p
-        Fetches the value of element(p) from the operand stack and pushes it on top of the stack.
+        Fetches the value of operand(p) from the operand stack and pushes it on top of the stack.
     
     5p  SET p
-        Pops the top element from the operand stack. After moving the data in the stack, it then overwrites
-        element(p) with the data.
+        Pops the top operand from the operand stack. After moving the data in the stack, it then overwrites
+        operand(p) with the data.
     
-    6p  READ p
-        Reads on byte of data from the input port p  (blocking read if no data is available) and
-        pushes it on the stack.
+    6p  LOAD p
+	Uses value of operand(p) as the RAM location, fetches the byte from there and pushes it on the stack.
+        
+    7p  STORE p
+	Uses value of operand(p) as the RAM location, pops off operand(0) and writes it to this location.
+        
+    8p  READ p
+        Reads one byte of data from the i/o port p (read operation blocks until
+	data is available) and pushes it on the stack.
     
-    7p  WRITE p
-        Pops the top element from the stack and writes it on the output port p (blocking write)
+    9p  WRITE p
+        Pops the top element from the stack and writes it to the i/o port p (blocking write)
         
-    8m mm  LOAD
-        Retrieves one byte from the memory on location mmm and puts on top of the stack
-        
-    9m mm  STORE
-        Pops the top element from the stack and writes it into memory location mmm.
-        
-    Am mm  LOADX
-        Pops top stack element and adds it to the memory address mmm to retrieve 
+    An mm LOADX
+        Pops off operand(0) and adds it to the instruction memory address mmn to retrieve 
         a byte of data from there. This byte will be pushed on top of the stack.
-        
-    Bm mm  STOREX
-        Pops top stack element and adds it to the memory address mmm to obtain a target 
-        address. Then the next element is popped from the stack and will be 
-        stored in this adress. 
-       
-    Cm mm  JMP
-        Continue program at the memory location mmm  
+              
+    Bn mm  JMP
+        Continue program at the instruction memory location mmn  
          
-    Dm mm  JZ
+    Cn mm  JZ
         Pops top element from the stack and if the value is 0, the program will
-        continue execution at memory location mmm  (otherwise just continue after the instruction)
+        continue execution at instruction memory location mmn  (otherwise just continue after the instruction)
         
-    Em mm  JNZ
+    Dn mm  JNZ
         Pops top element from the stack and if the value is not 0, the program will
-        continue execution at memory location mmm  (otherwise just continue after the instruction)
+        continue execution at instructino memory location mmn  (otherwise just continue after the instruction)
     
-    Fm mm JSR
-        Pushes memory location of the instruction after the JSR onto the return address stack 
-        and continues execution at memory location mmm. 
-        When a later RET instruction is encountered, the previously pushed address will be popped
-        of the address stack and execution continues there. 
+    En mm JSR
+        Pushes location of the instruction after the JSR onto the return address stack 
+        and continues execution at instruction memory location mmn. 
 
+    F?  RET 
+	Pops top value off the address stack and continues execution there.
+	

@@ -20,13 +20,13 @@ public class ByteASM
 	}
 	
 	private static String[] unaryoperations = { 
-		"NOP", "INC", "DEC", "NEG", "DOUBLE", "INV", "NOT", "NEGATIVE", "","","","","","","", "RET"
+		"NOP", "INC", "DEC", "NEG", "LSL1", "LSR1", "ASL1", "INV", "NOT"
 	};	 
 	private static String[] binaryoperations = { 
-		"POP", "ADD", "SUB", "LSL", "LSR", "ASR","AND","OR","XOR","EQ","LT","GT","LTS","GTS","CARRIES","BORROWS" 
+		"POP", "ADD", "SUB", "LSL", "LSR", "ASR","AND","OR","XOR","EQ","LT","GT","LTS","GTS","CARRY" 
 	};	 
-	private static String[] memoryoperations =
-	{	"LOAD", "STORE", "LOADX", "STOREX" 
+	private static String[] operationswithoperand =
+	{	"GET", "SET", "LOAD", "STORE" 
 	}; 	
 	private static String[] jumpoperations = { 
 		"JMP", "JZ", "JNZ", "JSR" 
@@ -123,47 +123,44 @@ public class ByteASM
 		}
 		if (operation.equals("PUSH"))
 		{
-			try
-			{	int v = Integer.parseInt(parameter);
-				if (v>=0 && v<=15)
-				{	return new byte[] { (byte) (0x20 | v) };
-				}
-				else
-				{	return new byte[] { (byte) (0x20 | (v&0x0f)), (byte) (0x30 | ((v>>4)&0x0f)) };
-				}				
-			}	catch (Exception e) {}
-			int v = resolveIdentifier(parameter, labels);
-			return new byte[] { (byte) (0x20 | (v&0xf)), (byte) (0x30 | ((v>>4)&0xf)) };
+			int v = resolveInt(parameter);
+			if (v>=0 && v<=15)
+			{	return new byte[] { (byte) (0x20 | v) };
+			}
+			else
+			{	return new byte[] { (byte) (0x20 | (v&0x0f)), (byte) (0x30 | ((v>>4)&0x0f)) };
+			}				
 		}
 		if (operation.equals("DUP"))        // a short form for GET 0
 		{	return new byte[] { (byte) 0x40 };		
 		}
-		if (operation.equals("GET"))
-		{	return new byte[]{ (byte) ( 0x40 | ((resolveInt(parameter)+stackdepth)&0x0f) ) };		
-		}
-		if (operation.equals("SET"))
-		{	if (stackdepth<1) stackdepth=1;
-			return new byte[]{ (byte) ( 0x50 | ((resolveInt(parameter)+stackdepth-1)&0x0f) ) };		
+		for (int i=0; i<operationswithoperand.length; i++)
+		{
+			if (operation.equals(operationswithoperand[i]))
+			{	int pos = resolveInt(parameter) + stackdepth;
+				return new byte[] { (byte) (((0x4+i)<<4) + (pos&0x0f)) };
+			}		
 		}
 		if (operation.equals("READ"))
-		{	return new byte[] { (byte) (0x60 | (resolveInt(parameter)&0x0f)) };
+		{	return new byte[] { (byte) (0x80 | (resolveInt(parameter)&0x0f)) };
 		}
 		if (operation.equals("WRITE"))
-		{	return new byte[] { (byte) (0x70 | (resolveInt(parameter)&0x0f)) };
+		{	return new byte[] { (byte) (0x90 | (resolveInt(parameter)&0x0f)) };
 		}
-		for (int i=0; i<memoryoperations.length; i++)
-		{
-			if (operation.equals(memoryoperations[i]))
-			{	int target = resolveIdentifier(parameter, labels);
-				return new byte[] { (byte) (((0x8+i)<<4) + (target&0x0f)), (byte) ((target>>4) & 0xff) };
-			}		
+		if (operation.equals("LOADX"))
+		{	int target = resolveIdentifier(parameter, labels);
+				return new byte[] { (byte) (0xA0 + (target&0x0f)), (byte) ((target>>4) & 0xff) };
 		}
 		for (int i=0; i<jumpoperations.length; i++)
 		{
 			if (operation.equals(jumpoperations[i]))
 			{	int target = resolveIdentifier(parameter, labels);
-				return new byte[] { (byte) (((0xC+i)<<4) + (target&0x0f)), (byte) ((target>>4) & 0xff) };
-			}		
+				return new byte[] { (byte) (((0xB+i)<<4) + (target&0x0f)), (byte) ((target>>4) & 0xff) };
+			}					
+		}
+		if (operation.equals("RET"))
+		{
+			return new byte[]{ (byte) 0xF0 };
 		}
 		if (operation.equals("DATA"))
 		{
