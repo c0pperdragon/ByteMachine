@@ -23,14 +23,13 @@ entity ByteALU is
 	constant operation1_inc    : unsigned(3 downto 0) := "0001";   -- $1
 	constant operation1_dec    : unsigned(3 downto 0) := "0010";   -- $2
 	constant operation1_neg    : unsigned(3 downto 0) := "0011";   -- $3
-	constant operation1_double : unsigned(3 downto 0) := "0100";   -- $4
 	-- bit-logic and boolean
-	constant operation1_inv    : unsigned(3 downto 0) := "0101";   -- $5
-	constant operation1_not    : unsigned(3 downto 0) := "0110";   -- $6
-	constant operation1_negate : unsigned(3 downto 0) := "0111";   -- $7
-	
-	constant operation1_ret    : unsigned(3 downto 0) := "1111";   -- $F pop top address from return stack and jump there
-																			
+	constant operation1_lsl1   : unsigned(3 downto 0) := "0100";   -- $4
+	constant operation1_lsr1   : unsigned(3 downto 0) := "0101";   -- $5
+	constant operation1_asr1   : unsigned(3 downto 0) := "0110";   -- $6
+	constant operation1_inv    : unsigned(3 downto 0) := "0111";   -- $7
+	constant operation1_not    : unsigned(3 downto 0) := "1000";   -- $8
+																				
 	-- binary operations 
 	constant operation2_a      : unsigned(3 downto 0) := "0000";   -- $0
 	-- arithmetic
@@ -52,7 +51,6 @@ entity ByteALU is
 	constant operation2_gts    : unsigned(3 downto 0) := "1101";   -- $D
 	-- carry computation (replaces use of a carry flag)
 	constant operation2_carries: unsigned(3 downto 0) := "1110";   -- $E
-	constant operation2_borrows: unsigned(3 downto 0) := "1111";   -- $F
 	
 end entity;
 
@@ -71,8 +69,12 @@ begin
 				op1 <= b-1;
 			when operation1_neg =>
 				op1 <= 0-b;
-			when operation1_double =>
-				op1 <= b+b;
+			when operation1_lsl1 =>
+				op1 <= shift_left(b,1);
+			when operation1_lsr1 =>
+				op1 <= shift_right(b,1);
+			when operation1_asr1 =>
+				op1 <= unsigned(shift_right(signed(b),1));
 			when operation1_inv =>
 				op1 <= not b;
 			when operation1_not =>
@@ -81,8 +83,6 @@ begin
 				else
 					op1 <= "00000000";
 				end if;
-			when operation1_negate =>
-				op1 <= unsigned(-signed(b));							
 			when others => 
 				op1 <= b;				
 		end case;
@@ -144,13 +144,9 @@ begin
 				tmp := tmp + b;
 				op2 <= "00000000";
 				op2(0) <= tmp(8);
-			when operation2_borrows =>
-				tmp:=(others=>'0');
-				tmp(7 downto 0) := a;
-				tmp := tmp - b;
-				op2 <= "00000000";
-				op2(0) <= tmp(8);
 				
+			when others =>
+				op2 <= a;
 		end case;
 	end process;
 end immediate;

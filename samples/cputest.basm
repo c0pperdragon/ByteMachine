@@ -1,0 +1,290 @@
+; Test program to test various components of a ByteMachine implementation	
+	JSR WRITEHELLO
+	JSR FIBONACCI
+	JSR SORTDEMO
+OVER:
+    JMP OVER
+
+; --- COMPUTE FIBONACCI NUMBERS AND WRITE TO OUTPUT ---
+FIBONACCI:
+	>PUSH 0    
+	->PUSH 1    
+	! a b     
+	>GET a
+	<JSR PRINTNUMBER  ; print(a)
+	>GET b
+	<JSR PRINTNUMBER  ; print(b)
+SMALLENOUGH:
+	>GET b   ; keep to use later for a
+	->GET a
+	--ADD     
+	--SET b    ; b = a+b	  
+	-<JSR PRINTNUMBER  
+	<SET a    ; a = previous value of b	
+	>PUSH 200
+	-LT
+	<JNZ SMALLENOUGH
+	JSR PRINTNEWLINE
+	RETURN 0
+			
+
+; --- WRITE A SHORT MESSAGE FROM INSTRUCTION MEMORY TO OUTPUT PORT ---		
+WRITEHELLO:
+	>PUSH 0      
+	! i 
+LOOPHELLO:
+    >GET i
+    -LOADX HELLO 
+	->DUP
+    -<JNZ HAVELETTER
+	<POP
+	JSR PRINTNEWLINE
+	RETURN 0
+HAVELETTER:	
+	->PUSH 0
+    <<WRITE 
+	INC
+    JMP LOOPHELLO
+HELLO:
+	DATA "Hello World!" 0
+
+	
+; --- SORT A LIST OF NUMBERS AND WRITE TO OUTPUT PORT ---		
+SORTDEMO:   
+	JSR PREPAREUNSORTED  ; writes data to RAM address 0
+	JSR PRINTSORTED
+	JSR PRINTNEWLINE
+	>PUSH 0              ; address
+	->PUSH 20            ; length
+	-->PUSH 20           ; temporary address
+	<<<JSR MERGESORT
+	JSR PRINTSORTED
+	JSR PRINTNEWLINE
+	RET 
+	
+PREPAREUNSORTED:        	; copy unsorted list to ram
+	>PUSH 0	 	
+	! i
+COPYLOOP:
+	>GET i
+	-LOADX UNSORTED
+	->GET i
+	<<STORE 
+	INC
+	>PUSH 20
+	-LT             
+	<JNZ COPYLOOP
+	RETURN 0
+UNSORTED:
+	DATA 16 5 88 42 7 94 32 93 41 11 70 61 12 0 210 56 200 99 96 99
+		
+PRINTSORTED:    ; write result of sort to port
+	>PUSH 0
+	! i
+PRINTLOOP:
+	>GET i
+	-LOAD 
+	<JSR PRINTNUMBER	
+	INC
+	>PUSH 20      
+	-LT             
+	<JNZ PRINTLOOP
+	RETURN 0
+		
+MERGESORT:  ;  ADDRESS LENGTH TEMPORARYBUFFER -> -
+	>PUSH 0
+	->PUSH 0
+	-->PUSH 0
+	--->PUSH 0
+	! address length temporarybuffer data0/length0 data1/length1 i/address0 address1
+	>GET length
+	->PUSH 2
+	-<LT
+	<JNZ ISSORTED
+	>GET length    
+	->PUSH 2
+	-<GT
+	<JNZ NEEDFULLSORT	
+	; exactly two elements to sort
+	>GET address
+	-LOAD 
+	<SET data0
+	>GET address
+	-INC
+	-LOAD 
+	<SET data1
+	>GET data0
+	->GET data1
+	-<LT
+	<JNZ ISSORTED
+	>GET data0
+	->GET address
+	--INC
+	<<STORE 
+	>GET data1
+	->GET address
+	<<STORE 
+	JMP ISSORTED	
+NEEDFULLSORT:
+	; --- divide area in two halves
+	>GET length
+	->PUSH 1
+	-<LSR
+	<SET length0 
+	>GET length
+	->GET length0
+	-<SUB	
+	<SET length1	
+	; -- sort first halve
+	>GET address
+	->GET length0
+	-->GET temporarybuffer
+    <<<JSR MERGESORT    
+	; -- sort second halve
+	>GET address
+	->GET length0
+	-<ADD
+	->GET length1
+	-->GET temporarybuffer
+	<<<JSR MERGESORT
+	; -- copy first half to temporary buffer
+	>GET address
+	->GET temporarybuffer
+	-->GET length0
+	<<<JSR MEMCOPY
+	; --merge both halves	
+	>GET address
+	->GET length0
+	-<ADD
+	<SET address1
+	>GET temporarybuffer
+	<SET address0	
+MERGEING:
+	; -- select lower of both values
+	>GET address0
+	-LOAD 
+	->GET address1
+	--LOAD 
+	-<GT 
+	<JNZ MUSTSELECT1
+	>GET length0
+	->PUSH 1
+	-<SUB
+	<SET length0
+	>GET address0
+	-LOAD 
+	->GET address0
+	--INC
+	-<SET address0
+	-JMP STOREMERGED
+MUSTSELECT1:	
+	>GET length1
+	->PUSH 1
+	-<SUB
+	<SET length1
+	>GET address1
+	-LOAD 
+	->GET address1
+	--INC
+	-<SET address1
+STOREMERGED:	
+	->GET address
+	-->DUP
+	---INC
+	--<SET address
+	<<STORE 
+	; -- check if any part is finished
+	; when part0 (from temporary) is consumed, everything is finished
+	>GET length0
+	<JZ ISSORTED	
+	>GET length1
+	<JNZ MERGEING
+	; -- part 1 is finished, so append remaining part0 from temporary
+	>GET address0
+	->GET address
+	-->GET length0
+	<<<JSR MEMCOPY
+ISSORTED:	  
+	RETURN 0							
+		
+
+; --- FACILITY FUNCTIONS ---
+MEMCOPY:		; SOURCEADDRESS TARGETADDRESS LENGTH  -> -
+	>PUSH 0	
+	! source target length index
+	>GET length
+	<JZ FINISHEDMEMCOPY
+MEMCOPYLOOP:
+	>GET source
+	-ADD 
+	-LOAD 
+	->GET index
+	-->GET target
+	--<ADD          
+	<<STORE
+	INC
+	>GET length
+	-LT    
+	<JNZ MEMCOPYLOOP
+FINISHEDMEMCOPY:
+	RETURN 0
+	
+
+PRINTNUMBER:  ;   NUMBER  ->  -
+	! number
+	>GET number
+	->PUSH 10
+	-<LT             ;  REPLACE WITH NON-POPPING OPERATION
+	<JNZ PRINTLAST
+	>PUSH 100
+	-JSR DETERMINEDIGIT
+	->DUP
+	-<JNZ PRINT100
+	<POP	
+	JMP CHECK10
+PRINT100:	
+	<JSR PRINTDIGIT	
+CHECK10:	
+	>PUSH 10
+	-JSR DETERMINEDIGIT	
+	<JSR PRINTDIGIT
+PRINTLAST:	
+	>PUSH 1
+	-JSR DETERMINEDIGIT
+	<JSR PRINTDIGIT
+	>PUSH 32
+	->PUSH 0
+	<<WRITE 
+	RETURN 0
+	
+DETERMINEDIGIT:  ; NUMBER POSITIONVALUE -> NUMBER DIGIT
+	! number positionvalue/digit 
+	>PUSH 0
+CHECKBIGENOUGH:
+	->GET number
+	-->GET positionvalue
+	--<LT       ; n < positionvalue ? 
+    -<JNZ DIGITDONE
+	->GET number
+	-->GET positionvalue
+	--<SUB
+	-<SET number
+	-INC
+	-JMP CHECKBIGENOUGH
+DIGITDONE:
+	<SET digit
+	RETURN 2
+	
+PRINTDIGIT:    ;   DIGIT  ->  -
+	>PUSH 48
+	-<ADD
+	->PUSH 0
+	<<WRITE
+	RET 
+	
+PRINTNEWLINE: 
+	>PUSH 10
+	->PUSH 0
+	<<WRITE 
+	RET 
+	

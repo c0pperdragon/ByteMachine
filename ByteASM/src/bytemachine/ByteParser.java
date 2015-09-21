@@ -13,6 +13,7 @@ public class ByteParser
 	private String currentOperation = null;
 	private String currentParameter = null;
 	private String currentLabel = null;
+	private String currentAssignmentTarget = null;
 	
 	public ByteParser(InputStream is)
 	{
@@ -40,6 +41,11 @@ public class ByteParser
 	{
 		return currentLabel;
 	}
+	public String getAssignmentTarget()
+	{
+		return currentAssignmentTarget;
+	}
+	
 	
 	
 	public boolean nextLine()
@@ -47,6 +53,7 @@ public class ByteParser
 		currentOperation = null;
 		currentParameter = null;
 		currentLabel = null;
+		currentAssignmentTarget = null;
 		
 		try
 		{	currentLine = reader.readLine();
@@ -64,6 +71,15 @@ public class ByteParser
 		if (idx>=0)
 		{	l = l.substring(0,idx);			
 		}
+		// check if this is an assignment
+		idx = l.indexOf('=');
+		if (idx>0)
+		{	currentAssignmentTarget = l.substring(0,idx).trim();
+			currentParameter = l.substring(idx+1).trim();
+			return true;		
+		}
+		
+		
 		// find and extract instruction label
 		idx = l.indexOf(':');
 		if (idx>=0)

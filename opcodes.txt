@@ -1,105 +1,139 @@
-The instruction set of the ByteMachine describes a stack machine with byte operands.
-Most instructions take operands from the stack and push the result back. 
-The top element of the stack is named operand(0), the element below is operand(1) and so on. 
-There is only a limited space for operands on the stack (depends on the CPU parameters) 
-and when the bottom-most element is pushed down, it is discarded. A subsequent pop will 
-create a 0 on the bottom of the stack.
 The CPU fetches instructions from a dedicated read-only instruction memory with an address
-width of 12 bit (4096 bytes maximum). A dedicated 256 byte read-write memory (CPUs can
-implement smaller values also) can be used to store arbitrary data.
-Additionally, there is an extra space for an address stack for the return addresses of
-subroutine calls. Like the operand stack, the size of this stack can be individually 
-set by CPU parameters.
+width of 12 bit (4096 bytes maximum). 
 
+Most instructions operate on the operand stack with new values being permanently pushed on top of 
+the stack, or values being popped of. In each situation, the topmost element in the stack is called
+operand(0), the next element below is called operand(1) and so on. A push will change the stack in a 
+way that all values are pushed from operand(n) to operand(n+1). operand(0) will get a new value according
+to the definiton of the instruction. A pop will move all values up the stack: operand(n) is moved to operand(n-1).
+The value of operand(0) must be discarded, but it can be overwritten by the instruction according its definition.
+Some instructions can modify the stack without actually doing pushes or pops.
+
+A dedicated 256 byte read-write memory can be used to store arbitrary data which can be addressed with a pointer.
 Machine instructions are either one-byte (for most computations) or two-byte (for jumps and ROM access).
-The type of the instruction is defined by the higher 4 bits of the first byte:
+A return stack is independently maintained for use of JSR / RET.
 
-    0o  Unary operations
-        Uses operand(0) to perform an operation and overwrites it with the result
-        00  NOP      Result is equal to the input 
-        01  INC      Increases by 1
-        02  DEC      Decreases by 1
-        03  NEG      Computes negative value for a number considered as a signed 8-bit value
-        04  LSL1     Shift left by one bit
-        05  LSR1     Logical shift right by one bit
-        06  ASL1     Arithmetical shift right by one bit
-        07  INV      Inverts all bits
-	08  NOT      1 when value=0, 0 otherwise    (boolean not)
-        09  unused
-        0A  unused
-        0B  unused
-        0C  unused
-        0D  unused
-        0E  unused
-        0F  unused
+The general type of the instruction is defined by the higher 4 bits of the first byte:
 
-    1o  Binary operations
-        Perform an operation with the top two stack operands, pops them off the stack and pushes the
-        result on top.
-        10  POP     result = operand(1)
-        11  ADD     result = operand(1) + operand(0)
-        12  SUB     result = operand(1) - operand(0)
-        13  LSL     result = operand(1) << operand(0)
-        14  LSR     result = operand(1) >>> operand(0)
-        15  ASR     result = operand(1) >> operand(0)
-        16  AND     result = operand(1) & operand(0)
-        17  OR      result = operand(1) | operand(0)
-        18  XOR     result = operand(1) ^ operand(0)
-        19  EQ      result = 1 when operand(1)==operand(0) , 0 otherwise
-        1A  LT      result = 1 when operand(1)<operand(0)  , 0 otherwise
-        1B  GT      result = 1 when operand(1)>operand(0)  , 0 otherwise
-        1C  LTS     result = 1 when operand(1)<operand(0)  , 0 otherwise  (signed comparision)
-        1D  GTS     result = 1 when operand(1)>operand(0)  , 0 otherwise  (signed comparision)
-        1E  CARRY   result = 1 when operand(1) + operand(0) will cause an overflow on add, 0 otherwise
-        1F  unused
-                         
-    2p  PUSH p    
-        Uses p as an unsigned 4-bit value and pushes a byte with the value on top of the stack            
+
+    0o  Operations without stack movement
+		operand(1) and operand(0) are combined to get a new value for operand(0). operand(1) remains unchanged.
+        00  NOP     result = operand(0)
+        01  CLONE   result = operand(1)
+        02  ADD     result = operand(1) + operand(0)
+        03  SUB     result = operand(1) - operand(0)
+        04  LSL     result = operand(1) << operand(0)
+        05  LSR     result = operand(1) >>> operand(0)
+        06  ASR     result = operand(1) >> operand(0)
+        07  AND     result = operand(1) & operand(0)
+        08  OR      result = operand(1) | operand(0)
+        09  XOR     result = operand(1) ^^ operand(0)
+        0A  LT      result = 1 when operand(1)<operand(0)  , 0 otherwise
+        0B  GT      result = 1 when operand(1)>operand(0)  , 0 otherwise
+
+    1o  Operations with popping the stack
+             operand(1) and operand(0) are combined to get a result value. Then the stack is popped by
+             one element, and then operand(0) is overwritten with the result value.
+        10  <SQUEEZE result = operand(0)
+        11  <POP     result = operand(1)
+        12  <ADD     result = operand(1) + operand(0)
+        13  <SUB     result = operand(1) - operand(0)
+        14  <LSL     result = operand(1) << operand(0)
+        15  <LSR     result = operand(1) >>> operand(0)
+        16  <ASR     result = operand(1) >> operand(0)
+        17  <AND     result = operand(1) & operand(0)
+        18  <OR      result = operand(1) | operand(0)
+        19  <XOR     result = operand(1) ^^ operand(0)
+        1A  <LT      result = 1 when operand(1)<operand(0)  , 0 otherwise
+        1B  <GT      result = 1 when operand(1)>operand(0)  , 0 otherwise
+
+	2o  Operations with pushing the stack
+                operand(1) and operand(0) are combined to get a new value for operand(0).
+                The result is pushed on top of the stack.
+        20  >DUP     result = operand(0)
+        21  >OVER    result = operand(1)
+        22  >ADD     result = operand(1) + operand(0)
+        23  >SUB     result = operand(1) - operand(0)
+        24  >LSL     result = operand(1) << operand(0)
+        25  >LSR     result = operand(1) >>> operand(0)
+        26  >ASR     result = operand(1) >> operand(0)
+        27  >AND     result = operand(1) & operand(0)
+        28  >OR      result = operand(1) | operand(0)
+        29  >XOR     result = operand(1) ^^ operand(0)
+        2A  >LT      result = 1 when operand(1)<operand(0)  , 0 otherwise
+        2B  >GT      result = 1 when operand(1)>operand(0)  , 0 otherwise
+
+    3p  PUSH p    
+        Uses p as an unsigned 4-bit value and pushes a byte with this value on top of the stack            
       
-    3p  Add high bits   (has no assembler representation, but will be created automatically) 
+    4p  Add high bits   (has no assembler representation, but will be created automatically) 
         Uses p as high 4 bits which then replaces the 4 high bits of operand(0).
         This instruction will normally be used in conjunction with PUSH to bring a full 
         byte to the operand stack.
         
-    4p  GET p
-        Fetches the value of operand(p) from the operand stack and pushes it on top of the stack.
+    5p  GET p
+        Fetch the value of operand(p+1) from the operand stack and push it on top.
     
-    5p  SET p
-        Pops the top operand from the operand stack. After moving the data in the stack, it then overwrites
-        operand(p) with the data.
-    
-    6p  LOAD p
-	Uses value of operand(p) as the RAM location, fetches the byte from there and pushes it on the stack.
-        
-    7p  STORE p
-	Uses value of operand(p) as the RAM location, pops off operand(0) and writes it to this location.
-        
-    8p  READ p
-        Reads one byte of data from the i/o port p (read operation blocks until
-	data is available) and pushes it on the stack.
-    
-    9p  WRITE p
-        Pops the top element from the stack and writes it to the i/o port p (blocking write)
-        
-    An mm LOADX
-        Pops off operand(0) and adds it to the instruction memory address mmn to retrieve 
-        a byte of data from there. This byte will be pushed on top of the stack.
-              
-    Bn mm  JMP
+    6p  <SET p
+        Pop off a value from the stack, and then overwrite operand(p+1) with this value.
+
+	7p  SET p
+        Overwrite operand(p+1) with value of operand(0). No stack popping occurs.
+
+    8n mm JMP
         Continue program at the instruction memory location mmn  
          
-    Cn mm  JZ
-        Pops top element from the stack and if the value is 0, the program will
-        continue execution at instruction memory location mmn  (otherwise just continue after the instruction)
+    9n mm <JZ
+        Pops off operand(0) and if is 0, the program will continue execution at instruction memory location mmn
+        (otherwise just continue after the instruction)
         
-    Dn mm  JNZ
-        Pops top element from the stack and if the value is not 0, the program will
-        continue execution at instructino memory location mmn  (otherwise just continue after the instruction)
+    An mm <JNZ
+        Pops off operand(0) and if it is anything but 0, the program will continue execution at instruction memory location mmn
+        (otherwise just continue after the instruction)
     
-    En mm JSR
-        Pushes location of the instruction after the JSR onto the return address stack 
+    Bn mm JSR
+        Pushes the location of the instruction after the JSR onto the return stack
         and continues execution at instruction memory location mmn. 
 
-    F?  RET 
-	Pops top value off the address stack and continues execution there.
+    Cn mm LOADX
+        Use the value of operand(0) as an offset to the instruction memory address mmn and load a byte from there.
+		Overwrites operand(0) with the byte.
+	
+    Dp RET p
+	Pops off p operands from the stack. Then pops top element from the 
+	address stack and continues execution there.
+	
+		
+	F0 LOAD
+		Uses top operand as RAM address and fetches a byte from there. Overwrites operand(0) 
+		with this byte.
+
+	F1 >LOAD
+		Uses top operand as RAM address and fetches a byte from there. Pushes the byte
+		on top of the stack.
+		
+	F2 <STORE
+		Uses top operand as RAM address and stores operand(1) to this location.
+		One element is pushed off the operand stack.
+
+	F3 <<STORE
+		Uses top operand as RAM address and stores operand(1) to this location.
+		Then pops off both operands.
+		
+	F4 READ
+		Uses top operand as port address and reads a byte from there. Overwrites operand(0) 
+		with this byte.
+
+	F5 >READ
+		Uses top operand as port address and reads a byte from there. Pushes the
+		byte on top of the stack.
+			
+	F6 <WRITE
+		Uses top operand as port address and writes data to this location.
+		Top element is the popped off the stack.
+
+	F7 <<WRITE
+		Uses top operand as port address and writes data to this location.
+		Both operands are popped off the stack.
+		
 	

@@ -6,28 +6,36 @@ public class ByteVM
 {
 	public static void main(String args[]) throws IOException
 	{
-		(new ByteVM()).loadAndExecute("C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/writeport.basm");	
+		(new ByteVM()).loadAndExecute("C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/md5calc.basm");	
 	}
 
 	byte rom[];
 	byte ram[];
-	byte operands[];
+	byte stack[];
+	short returnstack[];
+	
 	int pc;
+	int sp;
+	int rsp;	
 
 	public ByteVM()
 	{	
 		rom = new byte[4096];
 		ram = new byte[256];
-		operands = new byte[50];
-		for (int i=0; i<operands.length; i++) operands[i]=(byte)0xff;
+		stack = new byte[256];
+		returnstack = new short[30];
 	}
 	
 	public void loadAndExecute(String filename) throws IOException
 	{
 		byte[] c = ByteASM.assemble(filename, null, System.out);
+		if (c==null) return;
 		System.arraycopy (c,0, rom,0, c.length);		
 		
 		pc = 0;
+		stack[0] = 0;
+		sp = 1;
+		rsp = 0;
 		while (step()) 
 		{	// printstate();
 		}
@@ -36,121 +44,164 @@ public class ByteVM
 	private boolean step()
 	{
 		byte command = rom[pc];
-		byte tmp;
+		byte tmp,tmp2;
 		int addr;
 		switch (command & 0xf0)
-		{	case 0x00:	
-				operands[0] = op1(command&0x0f, operands[0]);
+		{	case 0x00:				// not moving stack
+				tmp = pop();				
+				push(alu(command&0x0f, peek(),tmp, 0));
 				pc++;
 				break;
-			case 0x10:
-				tmp = op2(command&0x0f,operands[1],operands[0]);
-				pop();
-				operands[0]=tmp;
+			case 0x10:				// popping the stack
+				tmp = pop();
+				push(alu(command&0x0f, pop(),tmp, 0));
 				pc++;
 				break;
-			case 0x20:
-				push ((byte)(command & 0x0f));
+			case 0x20:				// pushing the stack
+				tmp = pop();
+				tmp2 = pop();
+				push(tmp2);
+				push(tmp);
+				push (alu(command & 0x0f, tmp2,tmp, 0));
 				pc++;
 				break;		
-			case 0x30:
-				operands[0] = (byte)((operands[0]&0x0f) | ((command<<4)&0xf0));
+			case 0x30:              // push
+				push(alu(0x0E, (byte)0, (byte)0, command&0x0f));
+				pc++;
+				break;
+			case 0x40:              // high bits
+				push (alu(0x0F, (byte)0, pop(), command&0x0f));
 				pc++;
 				break;		
-			case 0x40:
-				push(operands[command & 0x0f]);
+			case 0x50:              // >GET p				
+				push( stack[sp-2-(command & 0x0f)] );
 				pc++;
 				break;
-			case 0x50:
+			case 0x60:              // <SET p
 				tmp = pop();
-				operands[command & 0x0f] = tmp;
+				stack[sp-2-(command & 0x0f)] = tmp;
 				pc++;
 				break;
-			case 0x60:
-				tmp = operands[command & 0x0f];
-				push(ram[tmp&0xff]);
+			case 0x70:              // SET p
+				tmp = peek();
+				stack[sp-2-(command & 0x0f)] = tmp;
 				pc++;
 				break;
-			case 0x70:
-				tmp = operands[command & 0x0f];
-				ram[tmp&0xff] = pop();
-				pc++;
-				break;
-			case 0x80:
-				push(ioread(command & 0x0f));
-				pc++;
-				break;
-			case 0x90:
-				iowrite(command & 0x0f, pop());
-				pc++;
-				break;
-			case 0xA0:
-				pc++;
-				addr = (command&0x0f) | ((rom[pc]<<4)&0xff0);
-				tmp = pop();
-				push(rom[addr+(tmp&0xff)]);
-				pc++;
-				break;
-			case 0xB0:
+			case 0x80:            // JMP
 				addr = pc;				
 				pc++;
 				pc = (command&0x0f) | ((rom[pc]<<4)&0xff0);				
-				return addr != pc;  // can terminate VM when on tight endless loop
-			case 0xC0:
-				tmp = pop();
+				if (addr==pc)
+				{	return false;  // can terminate VM when on tight endless loop
+				}
+				break;
+			case 0x90:            // JZ
 				pc++;
-				if (tmp==0)
+				if (pop()==0)
 				{	pc = (command&0x0f) | ((rom[pc]<<4)&0xff0);
 				}
 				else
 				{	pc++;
 				}
 				break;
-			case 0xD0:
-				tmp = pop();
+			case 0xA0:           // JNZ
 				pc++;
-				if (tmp!=0)
+				if (pop()!=0)
 				{	pc = (command&0x0f) | ((rom[pc]<<4)&0xff0);
 				}
 				else
 				{	pc++;
 				}
 				break;
-			case 0xE0:
-				addr = pc+2;
-				push((byte)(addr>>>8));
-				push((byte)addr);
+			case 0xB0:           // JSR
+				returnstack[rsp] = (short) (pc+2);
+				rsp++;
 				pc++;
 				pc = (command&0x0f) | ((rom[pc]<<4)&0xff0);
 				break;
+			case 0xC0:            // LOADX
+				pc++;
+				addr = (command&0x0f) | ((rom[pc]<<4)&0xff0);
+				push ( rom[addr+(pop()&0xff)] );
+				pc++;				
+				break;
+			case 0xD0:			// RET
+				for (int i=(command&0x0f); i>0; i--) pop();
+				rsp--;
+				pc = returnstack[rsp];
+				break;
+								
 			case 0xF0:
-				addr = pop() & 0xff;
-				addr = addr | ((pop()&0xff)<<8);
-				pc = addr;				
-				break;				
+				switch (command&0x0F)
+				{	
+					case 0x00:              // LOAD
+						addr = pop()&0xff;
+						push (ram[addr]);
+						pc++;
+						break;
+					case 0x01:              // >LOAD
+						addr = peek()&0xff;
+						push (ram[addr]);
+						pc++;
+						break;
+					case 0x02:              // <STORE
+						tmp = pop();
+						ram[tmp & 0xff] = peek();
+						pc++;
+						break;
+					case 0x03:              // <<STORE
+						tmp = pop();
+						ram[tmp & 0xff] = pop();
+						pc++;
+						break;
+					case 0x04:              // READ
+						tmp = pop();
+						push(ioread(tmp));
+						pc++;
+						break;
+					case 0x05:              // >READ
+						push(ioread(peek()));
+						pc++;
+						break;
+					case 0x06:              // <WRITE
+						tmp = pop();
+						iowrite(tmp, peek());
+						pc++;
+						break;
+					case 0x07:              // <<WRITE
+						tmp = pop();
+						iowrite(tmp, pop());
+						pc++;
+						break;
+				}
+				break;
 		}
 		return true;
 	}
 
 	private void push(byte o)
 	{
-		System.arraycopy(operands,0, operands,1, operands.length-2);
-		operands[0] = o;	
+		stack[sp] = o;
+		sp++;	
 	}
 	private byte pop()
 	{	
-		int l = operands.length;
-		byte tmp = operands[0];
-		System.arraycopy(operands,1, operands,0, l-1);
-		operands[l-1] = 0;
-		return tmp;
+		sp--;
+		return stack[sp];	
 	}	
+	private byte peek()
+	{
+		if (sp>0) return stack[sp-1];
+		else      return 0;
+	}
+	
 	
 	private void printstate()
 	{
-		System.out.print(String.format("%03X", Integer.valueOf(pc)));
-		for (int i=0; i<50; i++)
-		{	System.out.print(String.format(" %02X", Integer.valueOf(operands[i] & 0xff)));
+		System.out.print(rsp+" ");
+		System.out.print(String.format("%03X ", Integer.valueOf(pc)));
+		for (int i=0; i<sp; i++)
+		{	System.out.print(String.format(" %02X", Integer.valueOf(stack[i] & 0xff)));
 		}
 		System.out.println();
 	}
@@ -168,40 +219,26 @@ public class ByteVM
 	}
 	
 	
-	private static byte op1(int operation, byte b)
-	{
-		switch (operation)
-		{	case 0x00:  return b; 
-			case 0x01:  return (byte)(b+1);
-			case 0x02:  return (byte)(b-1);
-			case 0x03:	return (byte)(-b);
-			case 0x04:  return (byte)(b<<1);
-			case 0x05:  return (byte)(b>>>1);
-			case 0x06:  return (byte)(b>>1);
-			case 0x07:  return (byte)(~b);
-			case 0x08:  return (b==0)?((byte)1):((byte)0);
-			default: return b;
-		}
-	}	
-	private static byte op2(int operation, byte a, byte b)
+	private static byte alu(int operation, byte a, byte b, int k)
 	{
         switch (operation)
-        {	case 0x00:	return a;
-        	case 0x01:  return (byte)(a+b);
-        	case 0x02:  return (byte)(a-b);
-        	case 0x03:  return (byte)(a<<(b&0xff));
-        	case 0x04:  return (byte)(a>>>(b&0xff));
-        	case 0x05:  return (byte)(a>>(b&0xff));
-        	case 0x06:  return (byte)(a&b);
-        	case 0x07:  return (byte)(a|b);
-        	case 0x08:  return (byte)(a^b);
-        	case 0x09:	return (byte)(a==b?1:0);
-        	case 0x0A:  return (byte)((a&0xff)<(b&0xff)?1:0);
-        	case 0x0B:  return (byte)((a&0xff)>(b&0xff)?1:0);
-        	case 0x0C:	return (byte)(a<b?1:0);
-        	case 0x0D:	return (byte)(a>b?1:0);
-        	case 0x0E:	return (byte)((a&0xff)+(b&0xff)>255 ? 1:0);
-			default:	return a;	
+        {	case 0x00:	return b;              	  				// NOP
+        	case 0x01:	return a;              	  				// CLONE
+        	case 0x02:  return (byte)(a+b);         			// ADD
+        	case 0x03:  return (byte)(a-b);						// SUB
+        	case 0x04:  return (byte)(a<<(b&0x07));				// LSL	
+        	case 0x05:  return (byte)((a&0xff)>>(b&0x07));			// LSR	
+        	case 0x06:  return (byte)(a>>(b&0xff));				// ASR
+        	case 0x07:  return (byte)(a&b);						// AND
+        	case 0x08:  return (byte)(a|b);						// OR
+        	case 0x09:  return (byte)(a^b);						// XOR
+        	case 0x0A:  return (byte)((a&0xff)<(b&0xff)?1:0);	// LT
+        	case 0x0B:  return (byte)((a&0xff)>(b&0xff)?1:0);	// GT
+        	case 0x0C:  return (byte)(b+1);                     // INC
+        	case 0x0D:  return (byte)(b-1);                     // DEC
+        	case 0x0E:  return (byte)(k&0x0f);
+        	case 0x0F:  return (byte)((k<<4) | (b&0xff));
+			default:	return b;	
         }
 	}
 

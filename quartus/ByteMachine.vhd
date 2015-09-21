@@ -43,14 +43,14 @@ entity ByteMachine is
 	constant opcode_highbits  : unsigned(3 downto 0) := "0011";  -- $3 Fill in 4 bits into the higher bit of operand 0
 	constant opcode_get       : unsigned(3 downto 0) := "0100";  -- $4 Get operand <par> and put on top of stack
 	constant opcode_set       : unsigned(3 downto 0) := "0101";  -- $5 Take operand 0 from stack in put in position <par> in stack
-	constant opcode_read      : unsigned(3 downto 0) := "0110";  -- $6
-	constant opcode_write     : unsigned(3 downto 0) := "0111";  -- $7	
-	constant opcode_load      : unsigned(3 downto 0) := "1000";  -- &8
-	constant opcode_store     : unsigned(3 downto 0) := "1001";  -- $9
-	constant opcode_loadx     : unsigned(3 downto 0) := "1010";  -- &A
-	constant opcode_storex    : unsigned(3 downto 0) := "1011";  -- $B
+	constant opcode_load      : unsigned(3 downto 0) := "0110";  -- &6
+	constant opcode_store     : unsigned(3 downto 0) := "0111";  -- $7
+	constant opcode_read      : unsigned(3 downto 0) := "1000";  -- $8
+	constant opcode_write     : unsigned(3 downto 0) := "1001";  -- $9	
+	constant opcode_ret       : unsigned(3 downto 0) := "1010";  -- &A
+	constant opcode_loadx     : unsigned(3 downto 0) := "1011";  -- $B
 	constant opcode_jmp       : unsigned(3 downto 0) := "1100";  -- $C use <par> has lower 4 bit, and the next command byte as higher 8 bit
-																 --    of address and jump 
+																                --    of address and jump 
 	constant opcode_jz        : unsigned(3 downto 0) := "1101";  -- $D pop element0 and do a jump (address resolution like jmp) if zero 
 	constant opcode_jnz       : unsigned(3 downto 0) := "1110";  -- $E pop element0 and do a jump (address resolution like jmp) if not zero
 	constant opcode_jsr       : unsigned(3 downto 0) := "1111";  -- $F perform a jump, and push the return address on the return stack
@@ -77,7 +77,7 @@ begin
 	process (clk)		
 	
 		-- machine states
-		type state_t is (state_command, state_jump, state_load, state_store, 
+		type state_t is (state_command, state_jump, state_loadx,
 							state_waitload, state_waitstore, state_write, state_read);
 	
 		-- various registers of the machine 
@@ -248,26 +248,26 @@ begin
 						lowaddressbits := parameter;
 						state := state_jump;
 						command := ramread;
+
+					when opcode_ret =>
+						pc := pc+1;
 					
 					-- load byte from absolute address. this operation is implemented by the same
 					-- means as loading with index, so an offset 0 is prepared
 					when opcode_load =>
-						lowaddressbits := parameter;
-						addressoffset := (others=>'0');
-						state := state_load;
-						command := ramread;
-						pc := pc+1;
+						state := state_waitload;
+						pc := pc;
 						
 					-- write byte to absolute address. this operation is implemented by the same
 					-- means as storing with index, so an offset 0 is prepared
 					when opcode_store =>
-						lowaddressbits := parameter;
-						addressoffset := (others=>'0');
-						state := state_store;
-						command := ramread;
-						pc := pc+1;
+						state := state_waitstore;
+						pc := pc;
+
+						operands(1 to operandstacksize-2) := operands(2 to operandstacksize-1);
+						operands(operandstacksize-1) := (others=>'0');				
 					
-					-- load byte from address + element0. until the second part of the address arrives,
+					-- load byte from instruction address + element0. until the second part of the address arrives,
 					-- the lower 4 bits of the address can be combined with operand 0 to
 					-- get the lower 4 bit of the total address. 
 					-- the other 8 bits can only be computed later, using the 5-bit addressoffset
@@ -277,34 +277,15 @@ begin
 						tmp9 := tmp9 + parameter;					
 						lowaddressbits := tmp9(3 downto 0);
 						addressoffset := tmp9(8 downto 4);
-						state := state_load;
+						state := state_loadx;
 						command := ramread;
 						pc := pc+1;
 	
 						operands(1 to operandstacksize-2) := operands(2 to operandstacksize-1);
 						operands(operandstacksize-1) := (others=>'0');				
 						operands(0) := operand1;				
-	
-					
-					-- write byte to address + operand0. until the second part of the address arrives,
-					-- the lower 4 bits of the address can be combined with operand 0 to
-					-- get the lower 4 bit of the total address. 
-					-- the other 8 bits can only be computed later, using the 5-bit addressoffset
-					when opcode_storex =>
-						tmp9(8) := '0';
-						tmp9(7 downto 0) := operands(0);
-						tmp9 := tmp9 + parameter;					
-						lowaddressbits := tmp9(3 downto 0);
-						addressoffset := tmp9(8 downto 4);
-						state := state_store;
-						command := ramread;
-						pc := pc+1;
-	
-						operands(1 to operandstacksize-2) := operands(2 to operandstacksize-1);
-						operands(operandstacksize-1) := (others=>'0');				
-						operands(0) := operand1;				
-					
-					end case;
+										
+				end case;
 									
 				-- state to perform a jump. the jump address is already fully available.
 				when state_jump =>
@@ -317,23 +298,14 @@ begin
 					
 				-- in this state, it was detected that a load instruction needs to be done,
 				-- and the complete base address is now already available to be combined with an offset			
-				when state_load =>
+				when state_loadx =>
 					pc := pc;					  		   -- do not increase program counter to allow time 
 																-- for the memory access
 					command := ramread;              -- already receive the next instruction (must not be executed now)
 	
 					state := state_waitload;
-
-				-- in this state, it was detected that a store instruction needs to be done,
-				-- and the complete base address was already available to be combined with an offset			
-				when state_store =>
-					pc := pc;					  		   -- do not increase program counter to allow time 
-																-- for the memory access
-					command := ramread;              -- already receive the next instruction (must not be executed now)
-	
-					state := state_waitstore;
 						
-				-- in this state, the read or write was issued and the next instruction is available.
+				-- in this state, the read was issued and the next instruction is available.
 				-- nevertheless we must not execute it before the data arrives or is stored to avoid
 				-- ordering conflicst. 
 				-- when data is expected, we already prepare the stack to push the data 
@@ -389,21 +361,28 @@ begin
 		-- static logic to create pin values from internal state
 		-- ram access
 		case state is
+		when state_command =>
+			case command(7 downto 4) is
+			when opcode_read =>
+				ramaddress <= "1111" & (operands(0) + command(3 downto 0));
+				ramwe <= '0';
+			when opcode_write =>
+				ramwe <= '1';
+				ramaddress <= "1111" & (operands(0) + command(3 downto 0));
+			when others =>
+				ramaddress <= pc;
+				ramwe <= '0';				
+			end case;	
 		when state_jump =>
 			tmp12(11 downto 4) := command;
 			tmp12(3 downto 0) := lowaddressbits;
 			ramaddress <= tmp12;
 			ramwe <= '0';
-		when state_load =>
+		when state_loadx =>
 			tmp12(11 downto 4) := command + addressoffset;
 			tmp12(3 downto 0) := lowaddressbits; 
 			ramaddress <= tmp12;
 			ramwe <= '0';
-		when state_store =>
-			tmp12(11 downto 4) := command + addressoffset;
-			tmp12(3 downto 0) := lowaddressbits; 
-			ramaddress <= tmp12;
-			ramwe <= '1';
 		when others =>
 			ramaddress <= pc;
 			ramwe <= '0';
@@ -439,12 +418,11 @@ begin
 		case state is
 			when state_command =>        test_state <= 0;
 			when state_jump =>           test_state <= 1;
-			when state_load =>           test_state <= 2;
-			when state_store =>          test_state <= 3;
-			when state_waitload =>       test_state <= 4;
-			when state_waitstore =>      test_state <= 5;
-			when state_read =>           test_state <= 6;
-			when state_write =>          test_state <= 7;
+			when state_loadx =>           test_state <= 2;
+			when state_waitload =>       test_state <= 3;
+			when state_waitstore =>      test_state <= 4;
+			when state_read =>           test_state <= 5;
+			when state_write =>          test_state <= 6;
 		end case;
 		test_pc <= pc;
 		test_command <= command;
