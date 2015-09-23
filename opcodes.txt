@@ -30,6 +30,8 @@ The general type of the instruction is defined by the higher 4 bits of the first
         09  XOR     result = operand(1) ^^ operand(0)
         0A  LT      result = 1 when operand(1)<operand(0)  , 0 otherwise
         0B  GT      result = 1 when operand(1)>operand(0)  , 0 otherwise
+        0C  INC     result = operand(0) + 1
+        0D  DEC     result = operand(0) - 1
 
     1o  Operations with popping the stack
              operand(1) and operand(0) are combined to get a result value. Then the stack is popped by
@@ -46,6 +48,8 @@ The general type of the instruction is defined by the higher 4 bits of the first
         19  <XOR     result = operand(1) ^^ operand(0)
         1A  <LT      result = 1 when operand(1)<operand(0)  , 0 otherwise
         1B  <GT      result = 1 when operand(1)>operand(0)  , 0 otherwise
+        2C  <INC     result = operand(0) + 1
+        2D  <DEC     result = operand(0) - 1
 
 	2o  Operations with pushing the stack
                 operand(1) and operand(0) are combined to get a new value for operand(0).
@@ -62,6 +66,8 @@ The general type of the instruction is defined by the higher 4 bits of the first
         29  >XOR     result = operand(1) ^^ operand(0)
         2A  >LT      result = 1 when operand(1)<operand(0)  , 0 otherwise
         2B  >GT      result = 1 when operand(1)>operand(0)  , 0 otherwise
+        2C  <INC     result = operand(0) + 1
+        2D  <DEC     result = operand(0) - 1
 
     3p  PUSH p    
         Uses p as an unsigned 4-bit value and pushes a byte with this value on top of the stack            
@@ -77,32 +83,34 @@ The general type of the instruction is defined by the higher 4 bits of the first
     6p  <SET p
         Pop off a value from the stack, and then overwrite operand(p+1) with this value.
 
-	7p  SET p
+    7p  SET p
         Overwrite operand(p+1) with value of operand(0). No stack popping occurs.
 
-    8n mm JMP
-        Continue program at the instruction memory location mmn  
+    8m mm JMP
+        Continue program at the instruction memory location mmm  
          
-    9n mm <JZ
-        Pops off operand(0) and if is 0, the program will continue execution at instruction memory location mmn
+    9m mm <JZ
+        Pops off operand(0) and if is 0, the program will continue execution at instruction memory location mmm
         (otherwise just continue after the instruction)
         
-    An mm <JNZ
-        Pops off operand(0) and if it is anything but 0, the program will continue execution at instruction memory location mmn
+    Am mm <JNZ
+        Pops off operand(0) and if it is anything but 0, the program will continue execution at instruction memory location mmm
         (otherwise just continue after the instruction)
     
-    Bn mm JSR
+    Bm mm JSR
         Pushes the location of the instruction after the JSR onto the return stack
-        and continues execution at instruction memory location mmn. 
+        and continues execution at instruction memory location mmm. 
 
-    Cn mm LOADX
+    Cm mm LOADX
         Use the value of operand(0) as an offset to the instruction memory address mmn and load a byte from there.
-		Overwrites operand(0) with the byte.
+	Overwrites operand(0) with the byte.
 	
     Dp RET p
 	Pops off p operands from the stack. Then pops top element from the 
 	address stack and continues execution there.
 	
+Opcodes of the form Fx are instructions that do not need an explicit parameter, but take
+everything from the stack:
 		
 	F0 LOAD
 		Uses top operand as RAM address and fetches a byte from there. Overwrites operand(0) 
@@ -112,28 +120,28 @@ The general type of the instruction is defined by the higher 4 bits of the first
 		Uses top operand as RAM address and fetches a byte from there. Pushes the byte
 		on top of the stack.
 		
-	F2 <STORE
-		Uses top operand as RAM address and stores operand(1) to this location.
-		One element is pushed off the operand stack.
+	F2 STORE
+		Uses operand(1) as RAM address and stores operand(0) to this location.
+		Stack remains unchanged.
 
-	F3 <<STORE
-		Uses top operand as RAM address and stores operand(1) to this location.
-		Then pops off both operands.
+	F3 <STORE
+		Uses operand(1) as RAM address and stores operand(0) to this location.
+		Top element is then popped of the stack (the address remains as top operand).
 		
 	F4 READ
 		Uses top operand as port address and reads a byte from there. Overwrites operand(0) 
 		with this byte.
 
 	F5 >READ
-		Uses top operand as port address and reads a byte from there. Pushes the
+		Uses operand(0) as port address and reads a byte from there. Pushes the
 		byte on top of the stack.
 			
-	F6 <WRITE
-		Uses top operand as port address and writes data to this location.
-		Top element is the popped off the stack.
+	F6 WRITE
+		Uses operand(0) as port address and writes operand(1) to this port.
+		Stack remains unchanged
 
-	F7 <<WRITE
-		Uses top operand as port address and writes data to this location.
-		Both operands are popped off the stack.
+	F7 <WRITE
+		Uses operand(0) as port address and writes operand(1) to this port.
+		Top element is then popped off the stack (the data byte remains).
 		
 	

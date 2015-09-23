@@ -66,11 +66,11 @@ public class ByteVM
 				pc++;
 				break;		
 			case 0x30:              // push
-				push(alu(0x0E, (byte)0, (byte)0, command&0x0f));
+				push((byte)(command&0x0f));
 				pc++;
 				break;
 			case 0x40:              // high bits
-				push (alu(0x0F, (byte)0, pop(), command&0x0f));
+				push ((byte)((pop()&0x0f)|(command<<4)));
 				pc++;
 				break;		
 			case 0x50:              // >GET p				
@@ -90,7 +90,7 @@ public class ByteVM
 			case 0x80:            // JMP
 				addr = pc;				
 				pc++;
-				pc = (command&0x0f) | ((rom[pc]<<4)&0xff0);				
+				pc = ((command&0x0f)<<8) | (rom[pc]&0xff);
 				if (addr==pc)
 				{	return false;  // can terminate VM when on tight endless loop
 				}
@@ -98,7 +98,7 @@ public class ByteVM
 			case 0x90:            // JZ
 				pc++;
 				if (pop()==0)
-				{	pc = (command&0x0f) | ((rom[pc]<<4)&0xff0);
+				{	pc = ((command&0x0f)<<8) | (rom[pc]&0xff);
 				}
 				else
 				{	pc++;
@@ -107,7 +107,7 @@ public class ByteVM
 			case 0xA0:           // JNZ
 				pc++;
 				if (pop()!=0)
-				{	pc = (command&0x0f) | ((rom[pc]<<4)&0xff0);
+				{	pc = ((command&0x0f)<<8) | (rom[pc]&0xff);
 				}
 				else
 				{	pc++;
@@ -117,11 +117,11 @@ public class ByteVM
 				returnstack[rsp] = (short) (pc+2);
 				rsp++;
 				pc++;
-				pc = (command&0x0f) | ((rom[pc]<<4)&0xff0);
+				pc = ((command&0x0f)<<8) | (rom[pc]&0xff);
 				break;
 			case 0xC0:            // LOADX
 				pc++;
-				addr = (command&0x0f) | ((rom[pc]<<4)&0xff0);
+				addr = ((command&0x0f)<<8) | (rom[pc]&0xff);
 				push ( rom[addr+(pop()&0xff)] );
 				pc++;				
 				break;
@@ -144,14 +144,15 @@ public class ByteVM
 						push (ram[addr]);
 						pc++;
 						break;
-					case 0x02:              // <STORE
+					case 0x02:              // STORE
 						tmp = pop();
-						ram[tmp & 0xff] = peek();
+						ram[peek() & 0xff] = tmp;
+						push(tmp);						
 						pc++;
 						break;
-					case 0x03:              // <<STORE
+					case 0x03:              // <STORE
 						tmp = pop();
-						ram[tmp & 0xff] = pop();
+						ram[peek() & 0xff] = tmp;
 						pc++;
 						break;
 					case 0x04:              // READ
@@ -163,14 +164,15 @@ public class ByteVM
 						push(ioread(peek()));
 						pc++;
 						break;
-					case 0x06:              // <WRITE
+					case 0x06:              // WRITE
 						tmp = pop();
 						iowrite(tmp, peek());
+						push(tmp);
 						pc++;
 						break;
-					case 0x07:              // <<WRITE
+					case 0x07:              // <WRITE
 						tmp = pop();
-						iowrite(tmp, pop());
+						iowrite(tmp, peek());
 						pc++;
 						break;
 				}
@@ -236,9 +238,7 @@ public class ByteVM
         	case 0x0B:  return (byte)((a&0xff)>(b&0xff)?1:0);	// GT
         	case 0x0C:  return (byte)(b+1);                     // INC
         	case 0x0D:  return (byte)(b-1);                     // DEC
-        	case 0x0E:  return (byte)(k&0x0f);
-        	case 0x0F:  return (byte)((k<<4) | (b&0xff));
-			default:	return b;	
+			default:	return 0;	
         }
 	}
 

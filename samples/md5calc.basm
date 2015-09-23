@@ -1,4 +1,4 @@
-; Implementation of an MD5 checksum computation with the ByteMachine
+; Implementation of an MD5 checksum computation with the ByteMachine.
 ; It is pretty cumbersome to work with 32 bit integers, but it can be 
 ; done even with this simple instruction set and without a carry flag.
 
@@ -53,54 +53,53 @@ STARTVALUES:	DATA32 0x67452301
                 DATA32 0xEFCDAB89
              	DATA32 0x98BADCFE
                 DATA32 0x10325476
-s :  DATA 7 12 17 22  7 12 17 22  7 12 17 22  7 12 17 22
-     DATA 5  9 14 20  5  9 14 20  5  9 14 20  5  9 14 20
-     DATA 4 11 16 23  4 11 16 23  4 11 16 23  4 11 16 23
-     DATA 6 10 15 21  6 10 15 21  6 10 15 21  6 10 15 21
-k : 	DATA32 0xd76aa478 0xe8c7b756 0x242070db 0xc1bdceee
-	    DATA32 0xf57c0faf 0x4787c62a 0xa8304613 0xfd469501
-	    DATA32 0x698098d8 0x8b44f7af 0xffff5bb1 0x895cd7be
-        DATA32 0x6b901122 0xfd987193 0xa679438e 0x49b40821
-        DATA32 0xf61e2562 0xc040b340 0x265e5a51 0xe9b6c7aa
-        DATA32 0xd62f105d 0x02441453 0xd8a1e681 0xe7d3fbc8
-        DATA32 0x21e1cde6 0xc33707d6 0xf4d50d87 0x455a14ed
-        DATA32 0xa9e3e905 0xfcefa3f8 0x676f02d9 0x8d2a4c8a
-        DATA32 0xfffa3942 0x8771f681 0x6d9d6122 0xfde5380c
-        DATA32 0xa4beea44 0x4bdecfa9 0xf6bb4b60 0xbebfbc70
-        DATA32 0x289b7ec6 0xeaa127fa 0xd4ef3085 0x04881d05
-        DATA32 0xd9d4d039 0xe6db99e5 0x1fa27cf8 0xc4ac5665
-        DATA32 0xf4292244 0x432aff97 0xab9423a7 0xfc93a039
-        DATA32 0x655b59c3 0x8f0ccc92 0xffeff47d 0x85845dd1
-        DATA32 0x6fa87e4f 0xfe2ce6e0 0xa3014314 0x4e0811a1
-        DATA32 0xf7537e82 0xbd3af235 0x2ad7d2bb 0xeb86d391 
+s : DATA 7 12 17 22  7 12 17 22  7 12 17 22  7 12 17 22
+    DATA 5  9 14 20  5  9 14 20  5  9 14 20  5  9 14 20
+    DATA 4 11 16 23  4 11 16 23  4 11 16 23  4 11 16 23
+    DATA 6 10 15 21  6 10 15 21  6 10 15 21  6 10 15 21
+k : DATA32 0xd76aa478 0xe8c7b756 0x242070db 0xc1bdceee
+	DATA32 0xf57c0faf 0x4787c62a 0xa8304613 0xfd469501
+	DATA32 0x698098d8 0x8b44f7af 0xffff5bb1 0x895cd7be
+    DATA32 0x6b901122 0xfd987193 0xa679438e 0x49b40821
+    DATA32 0xf61e2562 0xc040b340 0x265e5a51 0xe9b6c7aa
+    DATA32 0xd62f105d 0x02441453 0xd8a1e681 0xe7d3fbc8
+    DATA32 0x21e1cde6 0xc33707d6 0xf4d50d87 0x455a14ed
+    DATA32 0xa9e3e905 0xfcefa3f8 0x676f02d9 0x8d2a4c8a
+    DATA32 0xfffa3942 0x8771f681 0x6d9d6122 0xfde5380c
+    DATA32 0xa4beea44 0x4bdecfa9 0xf6bb4b60 0xbebfbc70
+    DATA32 0x289b7ec6 0xeaa127fa 0xd4ef3085 0x04881d05
+    DATA32 0xd9d4d039 0xe6db99e5 0x1fa27cf8 0xc4ac5665
+    DATA32 0xf4292244 0x432aff97 0xab9423a7 0xfc93a039
+    DATA32 0x655b59c3 0x8f0ccc92 0xffeff47d 0x85845dd1
+    DATA32 0x6fa87e4f 0xfe2ce6e0 0xa3014314 0x4e0811a1
+    DATA32 0xf7537e82 0xbd3af235 0x2ad7d2bb 0xeb86d391 
 			
 			
 ; -------------- MD5 COMPUTATION -------------
 
 MD5INIT:
-	>PUSH 0
+	>PUSH A0
 MD5INITLOOP:	
 	->DUP
-	--LOADX STARTVALUES
-	-->OVER
-	--->PUSH A0
-	---<ADD
-	-<<STORE
+	--LOADX STARTVALUES-A0
+	-<STORE
 	-INC
-	->PUSH 16
+	->PUSH A0+16
 	--LT
 	-<JNZ MD5INITLOOP
 	<POP	
 	>PUSH BITLENGTH
 	<JSR CLEAR32	
-	>PUSH 0
-	->PUSH LENGTH
-	<<STORE	
+	>PUSH LENGTH
+	->PUSH 0
+	-<STORE	
+	<POP
 	>PUSH CONSTANT8
 	<JSR CLEAR32
-	>PUSH 8
-	->PUSH CONSTANT8
-	<<STORE	
+	>PUSH CONSTANT8
+	->PUSH 8
+	-<STORE	
+	<POP
 	RET
 	
 MD5APPEND:   ;  DATABYTE  -> -
@@ -140,6 +139,7 @@ MD5PRINT:
 	<JSR PRINT32
 	>PUSH D0
 	<JSR PRINT32
+	<JSR PRINTNEWLINE
 	RET
 
 MD5APPENDCHECKCOUNTER:  ;  DATABYTE INCREASECOUNTER -> -
@@ -153,19 +153,22 @@ MD5NOCOUNTERINCREASE:
 	-LOAD	
 	->PUSH M
 	-<ADD
-	<STORE
-	>PUSH LENGTH
-	-LOAD
-	-INC
-	->PUSH LENGTH
+	->GET databyte
 	-<STORE
+	<POP
+	>PUSH LENGTH
+	->LOAD
+	--INC
+	-<STORE
+	-LOAD
 	->PUSH 64
 	-<XOR
 	<JNZ MD5APPENDDONE
 	JSR MD5COMPUTEBLOCK
-	>PUSH 0
-	->PUSH LENGTH
-	<<STORE
+	>PUSH LENGTH
+	->PUSH 0
+	-<STORE
+	<POP
 MD5APPENDDONE:	
 	RETURN 0
 
@@ -302,27 +305,28 @@ COMPUTEBLOCKLOOP48:
 	RETURN 0
 
 MD5ROUND:   ;   i g  -> 
-	! i g
-	; loading value of k[i] into K
+	! i g 
 	>GET i
 	->PUSH 2
-	-<LSL	
-	->DUP	
+	-<LSL
+	! i g i4
+	; loading value of k[i] into K
+	>PUSH K
+	->GET i4
 	--LOADX k
-	-->PUSH K+0
-	-<<STORE
-	->DUP	
+	-<STORE
+	-INC
+	->GET i4
 	--LOADX k+1
-	-->PUSH K+1
-	-<<STORE
-	->DUP	
+	-<STORE
+	-INC
+	->GET i4
 	--LOADX k+2
-	-->PUSH K+2
-	-<<STORE
-	->DUP	
+	-<STORE
+	-INC
+	->GET i4
 	--LOADX k+3
-	-->PUSH K+3
-	-<<STORE
+	-<STORE
 	<POP
 	>PUSH A
 	->PUSH F
@@ -367,14 +371,15 @@ COPY32:   ; sourceaddr targetaddr -> -
 	>PUSH 0
 	! sourceaddr targetaddr index
 COPY32LOOP:	
-	>GET sourceaddr
+	>GET targetaddr
 	->GET index
 	-<ADD
-	-LOAD
-	->GET targetaddr
+	->GET sourceaddr
 	-->GET index
 	--<ADD
-	<<STORE
+	--LOAD
+	-<STORE
+	<POP
 	INC
 	>PUSH 4
 	-LT
@@ -385,19 +390,17 @@ AND32:	; sourceaddr targetaddr  -> -
 	>PUSH 0
 	! sourceaddr targetaddr index
 AND32LOOP:	
-	>GET sourceaddr
+	>GET targetaddr
 	->GET index
 	-<ADD
-	-LOAD
-	->GET targetaddr
-	-->GET index
-	--<ADD
-	--LOAD
-	-<AND
-	->GET targetaddr
-	-->GET index
-	--<ADD
-	<<STORE
+	->LOAD
+	-->GET sourceaddr
+	--->GET index
+	---<ADD
+	---LOAD
+	--<AND
+	-<STORE
+	<POP
 	INC
 	>PUSH 4
 	-LT
@@ -408,19 +411,17 @@ OR32:	; sourceaddr targetaddr  -> -
 	>PUSH 0
 	! sourceaddr targetaddr index
 OR32LOOP:	
-	>GET sourceaddr
+	>GET targetaddr
 	->GET index
 	-<ADD
-	-LOAD
-	->GET targetaddr
-	-->GET index
-	--<ADD
-	--LOAD
-	-<OR
-	->GET targetaddr
-	-->GET index
-	--<ADD
-	<<STORE
+	->LOAD
+	-->GET sourceaddr
+	--->GET index
+	---<ADD
+	---LOAD
+	--<OR
+	-<STORE
+	<POP
 	INC
 	>PUSH 4
 	-LT
@@ -431,19 +432,17 @@ XOR32:	; sourceaddr targetaddr  -> -
 	>PUSH 0
 	! sourceaddr targetaddr index
 XOR32LOOP:	
-	>GET sourceaddr
+	>GET targetaddr
 	->GET index
 	-<ADD
-	-LOAD
-	->GET targetaddr
-	-->GET index
-	--<ADD
-	--LOAD
-	-<XOR
-	->GET targetaddr
-	-->GET index
-	--<ADD
-	<<STORE
+	->LOAD
+	-->GET sourceaddr
+	--->GET index
+	---<ADD
+	---LOAD
+	--<XOR
+	-<STORE
+	<POP
 	INC
 	>PUSH 4
 	-LT
@@ -467,7 +466,10 @@ ADD32LOOP:
 	->GET targetaddr
 	-->GET index
 	--<ADD
-	<<STORE
+	-->OVER
+	--<STORE
+	-<POP
+	<POP
 	>GET index
 	-INC
 	-SET index
@@ -523,7 +525,10 @@ ROL32:      ;  distance address  -> -
 	--LOAD
 	-<OR
 	->GET address
-	<<STORE
+	-->OVER
+	--<STORE
+	-<POP
+	<POP
 	>GET distance
 	-DEC
 	<SET distance
@@ -540,7 +545,10 @@ ROLWITHCARRY:	  ; carry_in address -> carry_out address
 	-->GET carry
 	--<OR
 	-->GET address
-	-<<STORE
+	--->OVER
+	---<STORE
+	--<POP
+	-<POP
 	->PUSH 7
 	-<LSR
 	<SET carry
@@ -553,8 +561,7 @@ FILLLOOP:
 	>GET address
 	-ADD
 	->GET data
-	-->OVER
-	-<<STORE
+	-<STORE
 	<POP
 	>GET length
 	<JNZ FILLLOOP
@@ -565,7 +572,8 @@ FILLLOOP:
 PRINTNEWLINE:
 	>PUSH 10
 	->PUSH 0
-	<<WRITE
+	-<WRITE
+	<POP
 	RET
 	
 PRINT32:       ;     ADDRESS -> -
@@ -601,8 +609,10 @@ PRINTHEXBYTE:   ;  VALUE  ->  -
 PRINTHEXDIGIT:  ;  VALUE  ->  -
 	-LOADX HEXDIGITS
 	->PUSH 0
-	<<WRITE
-	RET	
+	-<WRITE
+	<POP
+	RET
+	
 HEXDIGITS:
 	DATA "0123456789ABCDEF"
 	

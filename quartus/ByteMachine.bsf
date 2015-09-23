@@ -21,9 +21,9 @@ agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 256 320)
+	(rect 16 16 248 256)
 	(text "ByteMachine" (rect 5 0 56 12)(font "Arial" ))
-	(text "inst" (rect 8 288 20 300)(font "Arial" ))
+	(text "inst" (rect 8 224 20 236)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -41,8 +41,8 @@ agreement for further details.
 	(port
 		(pt 0 64)
 		(input)
-		(text "ramread[7..0]" (rect 0 0 54 12)(font "Arial" ))
-		(text "ramread[7..0]" (rect 21 59 75 71)(font "Arial" ))
+		(text "romdata[7..0]" (rect 0 0 53 12)(font "Arial" ))
+		(text "romdata[7..0]" (rect 21 59 74 71)(font "Arial" ))
 		(line (pt 0 64)(pt 16 64)(line_width 3))
 	)
 	(port
@@ -60,132 +60,90 @@ agreement for further details.
 		(line (pt 0 96)(pt 16 96)(line_width 3))
 	)
 	(port
-		(pt 240 32)
+		(pt 232 32)
 		(output)
-		(text "ramaddress[11..0]" (rect 0 0 70 12)(font "Arial" ))
-		(text "ramaddress[11..0]" (rect 149 27 219 39)(font "Arial" ))
-		(line (pt 240 32)(pt 224 32)(line_width 3))
+		(text "romaddress[11..0]" (rect 0 0 70 12)(font "Arial" ))
+		(text "romaddress[11..0]" (rect 141 27 211 39)(font "Arial" ))
+		(line (pt 232 32)(pt 216 32)(line_width 3))
 	)
 	(port
-		(pt 240 48)
-		(output)
-		(text "ramwrite[7..0]" (rect 0 0 54 12)(font "Arial" ))
-		(text "ramwrite[7..0]" (rect 165 43 219 55)(font "Arial" ))
-		(line (pt 240 48)(pt 224 48)(line_width 3))
-	)
-	(port
-		(pt 240 64)
-		(output)
-		(text "ramwe" (rect 0 0 27 12)(font "Arial" ))
-		(text "ramwe" (rect 192 59 219 71)(font "Arial" ))
-		(line (pt 240 64)(pt 224 64)(line_width 1))
-	)
-	(port
-		(pt 240 80)
+		(pt 232 48)
 		(output)
 		(text "adr_o[3..0]" (rect 0 0 43 12)(font "Arial" ))
-		(text "adr_o[3..0]" (rect 176 75 219 87)(font "Arial" ))
-		(line (pt 240 80)(pt 224 80)(line_width 3))
+		(text "adr_o[3..0]" (rect 168 43 211 55)(font "Arial" ))
+		(line (pt 232 48)(pt 216 48)(line_width 3))
 	)
 	(port
-		(pt 240 96)
+		(pt 232 64)
 		(output)
 		(text "dat_o[7..0]" (rect 0 0 42 12)(font "Arial" ))
-		(text "dat_o[7..0]" (rect 177 91 219 103)(font "Arial" ))
-		(line (pt 240 96)(pt 224 96)(line_width 3))
+		(text "dat_o[7..0]" (rect 169 59 211 71)(font "Arial" ))
+		(line (pt 232 64)(pt 216 64)(line_width 3))
 	)
 	(port
-		(pt 240 112)
+		(pt 232 80)
 		(output)
 		(text "we_o" (rect 0 0 21 12)(font "Arial" ))
-		(text "we_o" (rect 198 107 219 119)(font "Arial" ))
-		(line (pt 240 112)(pt 224 112)(line_width 1))
+		(text "we_o" (rect 190 75 211 87)(font "Arial" ))
+		(line (pt 232 80)(pt 216 80)(line_width 1))
 	)
 	(port
-		(pt 240 128)
+		(pt 232 96)
 		(output)
 		(text "cyc_o" (rect 0 0 25 12)(font "Arial" ))
-		(text "cyc_o" (rect 194 123 219 135)(font "Arial" ))
-		(line (pt 240 128)(pt 224 128)(line_width 1))
+		(text "cyc_o" (rect 186 91 211 103)(font "Arial" ))
+		(line (pt 232 96)(pt 216 96)(line_width 1))
 	)
 	(port
-		(pt 240 144)
+		(pt 232 112)
 		(output)
 		(text "stb_o" (rect 0 0 22 12)(font "Arial" ))
-		(text "stb_o" (rect 197 139 219 151)(font "Arial" ))
-		(line (pt 240 144)(pt 224 144)(line_width 1))
+		(text "stb_o" (rect 189 107 211 119)(font "Arial" ))
+		(line (pt 232 112)(pt 216 112)(line_width 1))
 	)
 	(port
-		(pt 240 160)
+		(pt 232 128)
 		(output)
-		(text "test_state[31..0]" (rect 0 0 62 12)(font "Arial" ))
-		(text "test_state[31..0]" (rect 157 155 219 167)(font "Arial" ))
-		(line (pt 240 160)(pt 224 160)(line_width 3))
+		(text "test_state[2..0]" (rect 0 0 59 12)(font "Arial" ))
+		(text "test_state[2..0]" (rect 152 123 211 135)(font "Arial" ))
+		(line (pt 232 128)(pt 216 128)(line_width 3))
 	)
 	(port
-		(pt 240 176)
+		(pt 232 144)
 		(output)
 		(text "test_pc[11..0]" (rect 0 0 51 12)(font "Arial" ))
-		(text "test_pc[11..0]" (rect 168 171 219 183)(font "Arial" ))
-		(line (pt 240 176)(pt 224 176)(line_width 3))
+		(text "test_pc[11..0]" (rect 160 139 211 151)(font "Arial" ))
+		(line (pt 232 144)(pt 216 144)(line_width 3))
 	)
 	(port
-		(pt 240 192)
+		(pt 232 160)
+		(output)
+		(text "test_sp[7..0]" (rect 0 0 49 12)(font "Arial" ))
+		(text "test_sp[7..0]" (rect 162 155 211 167)(font "Arial" ))
+		(line (pt 232 160)(pt 216 160)(line_width 3))
+	)
+	(port
+		(pt 232 176)
+		(output)
+		(text "test_accu[7..0]" (rect 0 0 59 12)(font "Arial" ))
+		(text "test_accu[7..0]" (rect 152 171 211 183)(font "Arial" ))
+		(line (pt 232 176)(pt 216 176)(line_width 3))
+	)
+	(port
+		(pt 232 192)
+		(output)
+		(text "test_readdata[7..0]" (rect 0 0 74 12)(font "Arial" ))
+		(text "test_readdata[7..0]" (rect 137 187 211 199)(font "Arial" ))
+		(line (pt 232 192)(pt 216 192)(line_width 3))
+	)
+	(port
+		(pt 232 208)
 		(output)
 		(text "test_command[7..0]" (rect 0 0 80 12)(font "Arial" ))
-		(text "test_command[7..0]" (rect 139 187 219 199)(font "Arial" ))
-		(line (pt 240 192)(pt 224 192)(line_width 3))
+		(text "test_command[7..0]" (rect 131 203 211 215)(font "Arial" ))
+		(line (pt 232 208)(pt 216 208)(line_width 3))
 	)
-	(port
-		(pt 240 208)
-		(output)
-		(text "test_operand0[7..0]" (rect 0 0 76 12)(font "Arial" ))
-		(text "test_operand0[7..0]" (rect 143 203 219 215)(font "Arial" ))
-		(line (pt 240 208)(pt 224 208)(line_width 3))
-	)
-	(port
-		(pt 240 224)
-		(output)
-		(text "test_operand1[7..0]" (rect 0 0 75 12)(font "Arial" ))
-		(text "test_operand1[7..0]" (rect 144 219 219 231)(font "Arial" ))
-		(line (pt 240 224)(pt 224 224)(line_width 3))
-	)
-	(port
-		(pt 240 240)
-		(output)
-		(text "test_operand2[7..0]" (rect 0 0 76 12)(font "Arial" ))
-		(text "test_operand2[7..0]" (rect 143 235 219 247)(font "Arial" ))
-		(line (pt 240 240)(pt 224 240)(line_width 3))
-	)
-	(port
-		(pt 240 256)
-		(output)
-		(text "test_operand3[7..0]" (rect 0 0 76 12)(font "Arial" ))
-		(text "test_operand3[7..0]" (rect 143 251 219 263)(font "Arial" ))
-		(line (pt 240 256)(pt 224 256)(line_width 3))
-	)
-	(parameter
-		"operandstacksize"
-		"20"
-		""
-		(type "PARAMETER_SIGNED_DEC")	)
-	(parameter
-		"addressstacksize"
-		"10"
-		""
-		(type "PARAMETER_SIGNED_DEC")	)
-	(parameter
-		"outports"
-		"1"
-		""
-		(type "PARAMETER_SIGNED_DEC")	)
-	(parameter
-		"inports"
-		"1"
-		""
-		(type "PARAMETER_SIGNED_DEC")	)
 	(drawing
-		(rectangle (rect 16 16 224 288)(line_width 1))
+		(rectangle (rect 16 16 216 224)(line_width 1))
 	)
-	(annotation_block (parameter)(rect 256 -64 356 16))
 )

@@ -33,8 +33,8 @@ WRITEHELLO:
 	>PUSH 0      
 	! i 
 LOOPHELLO:
-    >GET i
-    -LOADX HELLO 
+	>DUP
+	-LOADX HELLO 
 	->DUP
     -<JNZ HAVELETTER
 	<POP
@@ -42,7 +42,8 @@ LOOPHELLO:
 	RETURN 0
 HAVELETTER:	
 	->PUSH 0
-    <<WRITE 
+    -<WRITE 
+	<POP
 	INC
     JMP LOOPHELLO
 HELLO:
@@ -66,10 +67,9 @@ PREPAREUNSORTED:        	; copy unsorted list to ram
 	>PUSH 0	 	
 	! i
 COPYLOOP:
-	>GET i
+	>DUP
 	-LOADX UNSORTED
-	->GET i
-	<<STORE 
+	<STORE 
 	INC
 	>PUSH 20
 	-LT             
@@ -117,13 +117,13 @@ MERGESORT:  ;  ADDRESS LENGTH TEMPORARYBUFFER -> -
 	->GET data1
 	-<LT
 	<JNZ ISSORTED
-	>GET data0
-	->GET address
-	--INC
-	<<STORE 
-	>GET data1
-	->GET address
-	<<STORE 
+	>GET address
+	->GET data1
+	-<STORE 
+	-INC
+	->GET data0
+	-<STORE 
+	<POP
 	JMP ISSORTED	
 NEEDFULLSORT:
 	; --- divide area in two halves
@@ -151,7 +151,7 @@ NEEDFULLSORT:
 	>GET address
 	->GET temporarybuffer
 	-->GET length0
-	<<<JSR MEMCOPY
+	<<<JSR MEMCOPY	
 	; --merge both halves	
 	>GET address
 	->GET length0
@@ -168,8 +168,7 @@ MERGEING:
 	-<GT 
 	<JNZ MUSTSELECT1
 	>GET length0
-	->PUSH 1
-	-<SUB
+	-DEC
 	<SET length0
 	>GET address0
 	-LOAD 
@@ -189,10 +188,11 @@ MUSTSELECT1:
 	-<SET address1
 STOREMERGED:	
 	->GET address
-	-->DUP
-	---INC
-	--<SET address
-	<<STORE 
+	-->OVER
+	--<STORE 
+	--INC
+	-<SET address
+	<POP
 	; -- check if any part is finished
 	; when part0 (from temporary) is consumed, everything is finished
 	>GET length0
@@ -220,8 +220,11 @@ MEMCOPYLOOP:
 	-LOAD 
 	->GET index
 	-->GET target
-	--<ADD          
-	<<STORE
+	--<ADD
+	-->OVER
+	--<STORE
+	-<POP
+	<POP
 	INC
 	>GET length
 	-LT    
@@ -254,7 +257,8 @@ PRINTLAST:
 	<JSR PRINTDIGIT
 	>PUSH 32
 	->PUSH 0
-	<<WRITE 
+	-<WRITE 
+	<POP
 	RETURN 0
 	
 DETERMINEDIGIT:  ; NUMBER POSITIONVALUE -> NUMBER DIGIT
@@ -279,12 +283,14 @@ PRINTDIGIT:    ;   DIGIT  ->  -
 	>PUSH 48
 	-<ADD
 	->PUSH 0
-	<<WRITE
+	-<WRITE
+	<POP
 	RET 
 	
 PRINTNEWLINE: 
 	>PUSH 10
 	->PUSH 0
-	<<WRITE 
+	-<WRITE 
+	<POP
 	RET 
 	

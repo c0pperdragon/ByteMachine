@@ -13,7 +13,7 @@ public class ByteASM
 {
 	public static void main(String[] args) throws IOException
 	{			
-		String srcfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/cputest.basm";		
+		String srcfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/pushpop.basm";		
 		String dstfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/quartus/TestProgram.hex";
 
 		PrintStream dest = new PrintStream(new FileOutputStream(dstfilename));
@@ -40,7 +40,7 @@ public class ByteASM
 		"JMP", "<JZ", "<JNZ", "JSR", "LOADX"
 	};	 
 	private static String[] parameterlessactions = {
-		"LOAD", ">LOAD", "<STORE", "<<STORE", "READ", ">READ", "<WRITE", "<<WRITE" 
+		"LOAD", ">LOAD", "STORE", "<STORE", "READ", ">READ", "WRITE", "<WRITE" 
 	};
 	
 	public static byte[] assemble(String srcfilename, PrintStream hexfile, PrintStream logfile) throws IOException
@@ -217,7 +217,7 @@ public class ByteASM
 		{
 			if (operation.equals(operationswithaddress[i]))
 			{	int target = resolveIdentifier(parameter, labels, constants, error);
-				return new byte[] { (byte) (((0x8+i)<<4) + (target&0x0f)), (byte) ((target>>4) & 0xff) };
+				return new byte[] { (byte) (((0x8+i)<<4) + ((target>>8)&0x0f)), (byte) (target & 0xff) };
 			}					
 		}
 		if (operation.equals("RET"))
@@ -227,7 +227,7 @@ public class ByteASM
 		if (operation.equals("RETURN"))
 		{
 			int keep = resolveInt(parameter,null,error);
-			int pop = stacklayout.size() - keep;
+			int pop = stacklayout.size() + stackdepth - keep;
 			return new byte[]{(byte)(0xD0 | pop)};
 		}
 		
@@ -326,6 +326,13 @@ public class ByteASM
 			int a = resolveIdentifier(l.substring(0,idx).trim(), labels, constants, error);
 			int b = resolveInt(l.substring(idx+1).trim(), constants, error);			
 			return a+b;
+		}
+		idx = l.indexOf("-");
+		if (idx>0)
+		{
+			int a = resolveIdentifier(l.substring(0,idx).trim(), labels, constants, error);
+			int b = resolveInt(l.substring(idx+1).trim(), constants, error);			
+			return a-b;
 		}
 		
 		Integer i = labels.get(l);

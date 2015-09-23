@@ -1,0 +1,21 @@
+; Simple program for testing push and pops
+	>PUSH 0
+	->PUSH 1
+	-->PUSH 2
+	--->PUSH 3
+	---->PUSH 4
+	! a b x y z
+	>PUSH 17
+	->PUSH 4
+	-<ADD
+	-INC
+	-SET a
+	-INC
+	<SET b
+	>GET a
+	<POP
+	>GET b
+	<POP
+	NOP	
+BUSTED:
+    JMP BUSTED

@@ -1,4 +1,4 @@
--- ByteALU
+-- Byt7eALU
 -- Building block for the stack machine that performs the logic 
 -- and arithmetic operations.
 -- This entity is not clocked, but changes its output at every
@@ -11,143 +11,74 @@ use ieee.std_logic_1164.all;
 entity ByteALU is	
 	port (
 		operation: in unsigned (3 downto 0);
+		bselector: in unsigned (1 downto 0);
 		a: in unsigned (7 downto 0);	
-		b: in unsigned (7 downto 0);	
-		op1: out unsigned(7 downto 0);
-		op2: out unsigned(7 downto 0)
-	);
-	
-	-- unary operations 
-	constant operation1_nop    : unsigned(3 downto 0) := "0000";   -- $0	unchanged
-	-- arithmetic
-	constant operation1_inc    : unsigned(3 downto 0) := "0001";   -- $1
-	constant operation1_dec    : unsigned(3 downto 0) := "0010";   -- $2
-	constant operation1_neg    : unsigned(3 downto 0) := "0011";   -- $3
-	-- bit-logic and boolean
-	constant operation1_lsl1   : unsigned(3 downto 0) := "0100";   -- $4
-	constant operation1_lsr1   : unsigned(3 downto 0) := "0101";   -- $5
-	constant operation1_asr1   : unsigned(3 downto 0) := "0110";   -- $6
-	constant operation1_inv    : unsigned(3 downto 0) := "0111";   -- $7
-	constant operation1_not    : unsigned(3 downto 0) := "1000";   -- $8
-																				
-	-- binary operations 
-	constant operation2_a      : unsigned(3 downto 0) := "0000";   -- $0
-	-- arithmetic
-	constant operation2_add    : unsigned(3 downto 0) := "0001";   -- $1
-	constant operation2_sub    : unsigned(3 downto 0) := "0010";   -- $2
-	-- shifting     (first operand will be shifted by second operands signed value)	
-	constant operation2_lsl    : unsigned(3 downto 0) := "0011";   -- $3
-	constant operation2_lsr    : unsigned(3 downto 0) := "0100";   -- $4
-	constant operation2_asr    : unsigned(3 downto 0) := "0101";   -- $5
-	-- bits-logic and boolean
-	constant operation2_and    : unsigned(3 downto 0) := "0110";   -- $6
-	constant operation2_or     : unsigned(3 downto 0) := "0111";   -- $7
-	constant operation2_xor    : unsigned(3 downto 0) := "1000";   -- $8
-	-- comparisions
-	constant operation2_eq     : unsigned(3 downto 0) := "1001";   -- $9
-	constant operation2_lt     : unsigned(3 downto 0) := "1010";   -- $A
-	constant operation2_gt     : unsigned(3 downto 0) := "1011";   -- $B
-	constant operation2_lts    : unsigned(3 downto 0) := "1100";   -- $C
-	constant operation2_gts    : unsigned(3 downto 0) := "1101";   -- $D
-	-- carry computation (replaces use of a carry flag)
-	constant operation2_carries: unsigned(3 downto 0) := "1110";   -- $E
-	
+		b0: in unsigned (7 downto 0);	
+		b1: in unsigned (7 downto 0);	
+		b2: in unsigned (7 downto 0);	
+		b3: in unsigned (7 downto 0);	
+		x0: out unsigned(7 downto 0);
+		x1: out unsigned(7 downto 0)
+	);	
 end entity;
 
 architecture immediate of ByteALU is
 begin		
-	process (operation,a,b)				
-	variable tmp : unsigned (8 downto 0);
-	begin					
-		-- compute results of unary operations
+	process (operation,bselector,a,b0,b1,b2,b3)				
+	variable r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,rA,rB,rC,rD,rE : unsigned(7 downto 0);
+	begin						
+		-- compute all possible intermediate results, before selecting the correct one
+		case bselector is          -- use selected B
+		when "00" => r0 := b0;
+		when "01" => r0 := b1;
+		when "10" => r0 := b2;
+		when "11" => r0 := b3;
+		end case;							
+		r1 := a;                   -- use A
+      r2 := a + b0;                                                        -- ADD
+      r3 := a - b0;													                  -- SUB
+      r4 := shift_left(a,to_integer(b0(2 downto 0)));                      -- LSL
+      r5 := shift_right(a,to_integer(b0(2 downto 0)));                     -- LSR
+      r6 := unsigned(shift_right(signed(a), to_integer(b0(2 downto 0))));  -- ASR
+		r7 := a AND b0;                                                      -- AND
+      r8 := a OR b0;                                                       -- OR
+      r9 := a XOR b0;                                                      -- XOR
+      if a<b0 then                                                         -- LT
+			rA := "00000001";
+		else	
+			rA := "00000000";
+		end if;
+      if a>b0 then                                                         -- GT
+			rB := "00000001";
+		else	
+			rB := "00000000";
+		end if;
+      rC := b0 + 1;                                                        -- INC
+      rD := b0 - 1;							                                    -- DEC
+		rE := "00000000";	                                                   -- unused
+		
+		-- select outputs according to operation 
 		case operation is
-			when operation1_nop =>
-				op1 <= b;
-			when operation1_inc =>
-				op1 <= b+1;
-			when operation1_dec =>
-				op1 <= b-1;
-			when operation1_neg =>
-				op1 <= 0-b;
-			when operation1_lsl1 =>
-				op1 <= shift_left(b,1);
-			when operation1_lsr1 =>
-				op1 <= shift_right(b,1);
-			when operation1_asr1 =>
-				op1 <= unsigned(shift_right(signed(b),1));
-			when operation1_inv =>
-				op1 <= not b;
-			when operation1_not =>
-				if b="00000000" then
-					op1 <= "00000001";
-				else
-					op1 <= "00000000";
-				end if;
-			when others => 
-				op1 <= b;				
+		when "0000" =>	x0<=r0; x1<=r0;       			  					  
+		when "0001" => x0<=r1; x1<=r1;
+      when "0010" => x0<=r2; x1<=r2;
+      when "0011" => x0<=r3; x1<=r3;
+      when "0100" => x0<=r4; x1<=r4;
+      when "0101" => x0<=r5; x1<=r5;
+      when "0110" => x0<=r6; x1<=r6;
+      when "0111" => x0<=r7; x1<=r7;
+      when "1000" => x0<=r8; x1<=r8;
+      when "1001" => x0<=r9; x1<=r9;
+      when "1010" => x0<=rA; x1<=rA;
+      when "1011" => x0<=rB; x1<=rB;
+      when "1100" => x0<=rC; x1<=rC;
+      when "1101" => x0<=rD; x1<=rD;
+      when "1110" => x0<=rE; x1<=rE;
+		when "1111" => x0<=a; x1<=b0;   -- special operation that delivers a to x0 and b0 to x1.
 		end case;
-	
-		-- compute results of binary operation
-		case operation is
-			when operation2_a => 	
-				op2 <= a;
-			when operation2_add => 	
-				op2 <= a+b;
-			when operation2_sub => 	
-				op2 <= a-b;
-			when operation2_lsl =>
-				op2 <= shift_left(a,to_integer(b));
-			when operation2_lsr =>
-				op2 <= shift_right(a,to_integer(b));
-			when operation2_asr =>
-				op2 <= unsigned(shift_right(signed(a), to_integer(b)));
-			when operation2_and =>
-				op2 <= a and b;
-			when operation2_or =>
-				op2 <= a or b;
-			when operation2_xor =>
-				op2 <= a xor b;
-			when operation2_eq =>
-				if a=b then
-					op2 <= "00000001";
-				else	
-					op2 <= "00000000";
-				end if;
-			when operation2_lt =>
-				if a<b then
-					op2 <= "00000001";
-				else	
-					op2 <= "00000000";
-				end if;
-			when operation2_gt =>
-				if a>b then
-					op2 <= "00000001";
-				else	
-					op2 <= "00000000";
-				end if;
-			when operation2_lts =>
-				if signed(a)<signed(b) then
-					op2 <= "00000001";
-				else	
-					op2 <= "00000000";
-				end if;
-			when operation2_gts =>
-				if signed(a)>signed(b) then
-					op2 <= "00000001";
-				else	
-					op2 <= "00000000";
-				end if;
-
-			when operation2_carries =>
-				tmp:=(others=>'0');
-				tmp(7 downto 0) := a;
-				tmp := tmp + b;
-				op2 <= "00000000";
-				op2(0) <= tmp(8);
-				
-			when others =>
-				op2 <= a;
-		end case;
+		
+		
+		
 	end process;
 end immediate;
 

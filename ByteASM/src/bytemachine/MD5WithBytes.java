@@ -114,6 +114,9 @@ public class MD5WithBytes
 		
 		for (int i=0; i<=15; i++)
 		{	COPY32(C,F);
+
+PRINTHEXBUFFER(A,16);PRINTNEWLINE();
+
 			XOR32(D,F);
 			AND32(B,F);
 			XOR32(D,F);
