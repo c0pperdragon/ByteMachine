@@ -1,0 +1,16 @@
+; Simple program to test load and store 
+	>PUSH 44
+	->PUSH 1
+	-->LOADX TESTDATA
+	--->LOADX TESTDATA+1
+	---<STORE 0
+	--<STORE 1
+	-<STORE 2
+	->LOAD 2
+	-<POP
+	<POP
+BUSTED:
+    JMP BUSTED
+
+TESTDATA: 
+	DATA  99 2 88 77

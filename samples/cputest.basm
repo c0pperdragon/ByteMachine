@@ -17,12 +17,15 @@ FIBONACCI:
 SMALLENOUGH:
 	>GET b   ; keep to use later for a
 	->GET a
-	--ADD     
-	--SET b    ; b = a+b	  
-	-<JSR PRINTNUMBER  
+	-->ADD     
+	--<JSR PRINTNUMBER  
+	-->ADD
+	--<SET b    ; b = a+b
+	-<POP
 	<SET a    ; a = previous value of b	
-	>PUSH 200
-	-LT
+	>GET b
+	->PUSH 200
+	-<LT
 	<JNZ SMALLENOUGH
 	JSR PRINTNEWLINE
 	RETURN 0
@@ -33,18 +36,16 @@ WRITEHELLO:
 	>PUSH 0      
 	! i 
 LOOPHELLO:
-	>DUP
-	-LOADX HELLO 
+	>LOADX HELLO 
 	->DUP
     -<JNZ HAVELETTER
 	<POP
 	JSR PRINTNEWLINE
 	RETURN 0
 HAVELETTER:	
-	->PUSH 0
-    -<WRITE 
-	<POP
-	INC
+    <WRITE 0
+	>PUSH 1
+	<ADD
     JMP LOOPHELLO
 HELLO:
 	DATA "Hello World!" 0
@@ -54,41 +55,42 @@ HELLO:
 SORTDEMO:   
 	JSR PREPAREUNSORTED  ; writes data to RAM address 0
 	JSR PRINTSORTED
-	JSR PRINTNEWLINE
 	>PUSH 0              ; address
 	->PUSH 20            ; length
 	-->PUSH 20           ; temporary address
 	<<<JSR MERGESORT
 	JSR PRINTSORTED
-	JSR PRINTNEWLINE
 	RET 
 	
 PREPAREUNSORTED:        	; copy unsorted list to ram
 	>PUSH 0	 	
 	! i
 COPYLOOP:
-	>DUP
-	-LOADX UNSORTED
-	<STORE 
-	INC
-	>PUSH 20
-	-LT             
+	>LOADX UNSORTED
+	<STORE 0
+	>PUSH 1
+	<ADD
+	>GET i
+	->PUSH 20
+	-<LT             
 	<JNZ COPYLOOP
 	RETURN 0
 UNSORTED:
 	DATA 16 5 88 42 7 94 32 93 41 11 70 61 12 0 210 56 200 99 96 99
 		
-PRINTSORTED:    ; write result of sort to port
+PRINTSORTED:    ; write result of sort to port 0
 	>PUSH 0
 	! i
 PRINTLOOP:
-	>GET i
-	-LOAD 
+	>LOAD 0
 	<JSR PRINTNUMBER	
-	INC
-	>PUSH 20      
-	-LT             
+	>PUSH 1
+	<ADD
+	>GET i
+	->PUSH 20      
+	-<LT             
 	<JNZ PRINTLOOP
+	JSR PRINTNEWLINE
 	RETURN 0
 		
 MERGESORT:  ;  ADDRESS LENGTH TEMPORARYBUFFER -> -
@@ -107,11 +109,12 @@ MERGESORT:  ;  ADDRESS LENGTH TEMPORARYBUFFER -> -
 	<JNZ NEEDFULLSORT	
 	; exactly two elements to sort
 	>GET address
-	-LOAD 
+	->LOAD 0
+	-<SQEEZE
 	<SET data0
 	>GET address
-	-INC
-	-LOAD 
+	->LOAD 1
+	-<SQEEZE
 	<SET data1
 	>GET data0
 	->GET data1
@@ -119,10 +122,9 @@ MERGESORT:  ;  ADDRESS LENGTH TEMPORARYBUFFER -> -
 	<JNZ ISSORTED
 	>GET address
 	->GET data1
-	-<STORE 
-	-INC
+	-<STORE 0
 	->GET data0
-	-<STORE 
+	-<STORE 1
 	<POP
 	JMP ISSORTED	
 NEEDFULLSORT:
@@ -162,18 +164,23 @@ NEEDFULLSORT:
 MERGEING:
 	; -- select lower of both values
 	>GET address0
-	-LOAD 
+	->LOAD 0
+	-<SQEEZE
 	->GET address1
-	--LOAD 
+	-->LOAD 0
+	--<SQEEZE
 	-<GT 
 	<JNZ MUSTSELECT1
 	>GET length0
-	-DEC
+	->PUSH 1
+	-<SUB
 	<SET length0
 	>GET address0
-	-LOAD 
+	->LOAD 0
+	-<SQEEZE
 	->GET address0
-	--INC
+	-->PUSH 1
+	--<ADD
 	-<SET address0
 	-JMP STOREMERGED
 MUSTSELECT1:	
@@ -182,21 +189,24 @@ MUSTSELECT1:
 	-<SUB
 	<SET length1
 	>GET address1
-	-LOAD 
+	->LOAD 0
+	-<SQEEZE
 	->GET address1
-	--INC
+	-->PUSH 1
+	--<ADD
 	-<SET address1
 STOREMERGED:	
 	->GET address
 	-->OVER
-	--<STORE 
-	--INC
+	--<STORE 0
+	-->PUSH 1
+	--<ADD
 	-<SET address
 	<POP
 	; -- check if any part is finished
 	; when part0 (from temporary) is consumed, everything is finished
 	>GET length0
-	<JZ ISSORTED	
+	<JZ MERGEISFINISHED	
 	>GET length1
 	<JNZ MERGEING
 	; -- part 1 is finished, so append remaining part0 from temporary
@@ -204,6 +214,7 @@ STOREMERGED:
 	->GET address
 	-->GET length0
 	<<<JSR MEMCOPY
+MERGEISFINISHED: 
 ISSORTED:	  
 	RETURN 0							
 		
@@ -216,18 +227,20 @@ MEMCOPY:		; SOURCEADDRESS TARGETADDRESS LENGTH  -> -
 	<JZ FINISHEDMEMCOPY
 MEMCOPYLOOP:
 	>GET source
-	-ADD 
-	-LOAD 
+	->ADD 
+	-<SQEEZE
+	->LOAD 0
+	-<SQEEZE
 	->GET index
 	-->GET target
 	--<ADD
 	-->OVER
-	--<STORE
+	--<STORE 0
 	-<POP
 	<POP
-	INC
-	>GET length
-	-LT    
+	>PUSH 1
+	<ADD
+	>GT
 	<JNZ MEMCOPYLOOP
 FINISHEDMEMCOPY:
 	RETURN 0
@@ -256,9 +269,7 @@ PRINTLAST:
 	-JSR DETERMINEDIGIT
 	<JSR PRINTDIGIT
 	>PUSH 32
-	->PUSH 0
-	-<WRITE 
-	<POP
+	<WRITE 0
 	RETURN 0
 	
 DETERMINEDIGIT:  ; NUMBER POSITIONVALUE -> NUMBER DIGIT
@@ -273,7 +284,8 @@ CHECKBIGENOUGH:
 	-->GET positionvalue
 	--<SUB
 	-<SET number
-	-INC
+	->PUSH 1
+	-<ADD
 	-JMP CHECKBIGENOUGH
 DIGITDONE:
 	<SET digit
@@ -282,15 +294,11 @@ DIGITDONE:
 PRINTDIGIT:    ;   DIGIT  ->  -
 	>PUSH 48
 	-<ADD
-	->PUSH 0
-	-<WRITE
-	<POP
+	<WRITE 0
 	RET 
 	
 PRINTNEWLINE: 
 	>PUSH 10
-	->PUSH 0
-	-<WRITE 
-	<POP
+	<WRITE 0
 	RET 
 	

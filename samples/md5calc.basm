@@ -1,6 +1,7 @@
 ; Implementation of an MD5 checksum computation with the ByteMachine.
 ; It is pretty cumbersome to work with 32 bit integers, but it can be 
 ; done even with this simple instruction set and without a carry flag.
+; The output should be: 0f8b13e30bf9c0195964561732be6cc6
 
 ; ----------- RAM LAYOUT ----------------
 	A0 = 0         ; 32 bit
@@ -31,14 +32,16 @@ APPENDEXAMPLETEXT:
 	! i 
 LOOPEXAMPLETEXT:
     >GET i
-    -LOADX EXAMPLETEXT 
+    ->LOADX EXAMPLETEXT 
+	-<SQUEEZE
 	->DUP
     -<JNZ HAVELETTER
 	<POP	
 	RETURN 0
 HAVELETTER:	
     <JSR MD5APPEND
-	INC
+	>PUSH 1
+	<ADD
     JMP LOOPEXAMPLETEXT
 
 	
@@ -80,25 +83,26 @@ k : DATA32 0xd76aa478 0xe8c7b756 0x242070db 0xc1bdceee
 MD5INIT:
 	>PUSH A0
 MD5INITLOOP:	
-	->DUP
-	--LOADX STARTVALUES-A0
-	-<STORE
-	-INC
+	->LOADX STARTVALUES-A0
+	-<STORE 0
+	->PUSH 1
+	-<ADD
 	->PUSH A0+16
-	--LT
+	-->LT
+	--<SQUEEZE
 	-<JNZ MD5INITLOOP
 	<POP	
 	>PUSH BITLENGTH
-	<JSR CLEAR32	
+	<JSR ZERO32	
 	>PUSH LENGTH
 	->PUSH 0
-	-<STORE	
+	-<STORE	0
 	<POP
 	>PUSH CONSTANT8
-	<JSR CLEAR32
+	<JSR ZERO32
 	>PUSH CONSTANT8
 	->PUSH 8
-	-<STORE	
+	-<STORE	0
 	<POP
 	RET
 	
@@ -113,7 +117,8 @@ MD5FINISH:
 	<<JSR MD5APPENDCHECKCOUNTER
 MD5FINISHLOOP:
 	>PUSH LENGTH
-	-LOAD
+	->LOAD 0
+	-<SQUEEZE
 	->PUSH 56
 	-<XOR
 	<JZ MD5FINISHLOOPEND
@@ -126,7 +131,7 @@ MD5FINISHLOOPEND:
 	->PUSH M+56
 	<<JSR COPY32
 	>PUSH M+60
-	<JSR CLEAR32
+	<JSR ZERO32
 	JSR MD5COMPUTEBLOCK
 	RET
 	
@@ -150,24 +155,27 @@ MD5APPENDCHECKCOUNTER:  ;  DATABYTE INCREASECOUNTER -> -
 	<<JSR ADD32		
 MD5NOCOUNTERINCREASE:	
 	>PUSH LENGTH
-	-LOAD	
+	->LOAD	0
+	-<SQUEEZE
 	->PUSH M
 	-<ADD
 	->GET databyte
-	-<STORE
+	-<STORE 0
 	<POP
 	>PUSH LENGTH
-	->LOAD
-	--INC
-	-<STORE
-	-LOAD
+	->LOAD 0
+	-->PUSH 1
+	--<ADD
+	-<STORE 0
+	->LOAD 0
+	-<SQUEEZE
 	->PUSH 64
 	-<XOR
 	<JNZ MD5APPENDDONE
 	JSR MD5COMPUTEBLOCK
 	>PUSH LENGTH
 	->PUSH 0
-	-<STORE
+	-<STORE 0
 	<POP
 MD5APPENDDONE:	
 	RETURN 0
@@ -203,9 +211,11 @@ COMPUTEBLOCKLOOP0:
 	>GET i
 	->GET i
 	<<JSR MD5ROUND
-	INC
+	>PUSH 1
+	<ADD
 	>PUSH 16
-	-LT
+	->LT
+	-<SQUEEZE
 	<JNZ COMPUTEBLOCKLOOP0
 COMPUTEBLOCKLOOP16:
 	>PUSH B
@@ -226,13 +236,16 @@ COMPUTEBLOCKLOOP16:
 	--<LSL
 	-->GET i
 	--<ADD
-	--INC
+	-->PUSH 1
+	--<ADD
 	-->PUSH 15
 	--<AND	
 	<<JSR MD5ROUND
-	INC
+	>PUSH 1
+	<ADD
 	>PUSH 32
-	-LT
+	->LT
+	-<SQUEEZE
 	<JNZ COMPUTEBLOCKLOOP16
 COMPUTEBLOCKLOOP32:
 	>PUSH B
@@ -255,15 +268,15 @@ COMPUTEBLOCKLOOP32:
 	-->PUSH 15
 	--<AND
 	<<JSR MD5ROUND
-	INC
+	>PUSH 1
+	<ADD
 	>PUSH 48
-	-LT
+	->LT
+	-<SQUEEZE
 	<JNZ COMPUTEBLOCKLOOP32
 COMPUTEBLOCKLOOP48:
 	>PUSH F
-	->PUSH 255
-	-->PUSH 4
-	<<<JSR FILL
+	<JSR MINUSONE32
 	>PUSH D
 	->PUSH F
 	<<JSR XOR32
@@ -286,9 +299,11 @@ COMPUTEBLOCKLOOP48:
 	-->PUSH 15
 	--<AND
 	<<JSR MD5ROUND
-	INC
+	>PUSH 1
+	<ADD
 	>PUSH 64
-	-LT
+	->LT
+	-<SQUEEZE
 	<JNZ COMPUTEBLOCKLOOP48		
 	>PUSH A
 	->PUSH A0
@@ -313,20 +328,27 @@ MD5ROUND:   ;   i g  ->
 	; loading value of k[i] into K
 	>PUSH K
 	->GET i4
-	--LOADX k
-	-<STORE
-	-INC
+	-->LOADX k
+	--<SQUEEZE
+	-<STORE 0
+	->PUSH 1
+	-<ADD
 	->GET i4
-	--LOADX k+1
-	-<STORE
-	-INC
+	-->LOADX k+1
+	--<SQUEEZE
+	-<STORE 0
+	->PUSH 1
+	-<ADD
 	->GET i4
-	--LOADX k+2
-	-<STORE
-	-INC
+	-->LOADX k+2
+	--<SQUEEZE
+	-<STORE 0
+	->PUSH 1
+	-<ADD
 	->GET i4
-	--LOADX k+3
-	-<STORE
+	-->LOADX k+3
+	--<SQUEEZE
+	-<STORE 0
 	<POP
 	>PUSH A
 	->PUSH F
@@ -342,7 +364,8 @@ MD5ROUND:   ;   i g  ->
 	->PUSH F
 	<<JSR ADD32
 	>GET i
-	-LOADX s
+	->LOADX s
+	-<SQUEEZE
 	->PUSH F
 	<<JSR ROL32
 	>PUSH D
@@ -361,92 +384,132 @@ MD5ROUND:   ;   i g  ->
 	
 ; ---------- COMPUTATION AND MOVEMENT PRIMITIVES ---------
 
-CLEAR32:	  ; ADDRESS -> -
+ZERO32:	  ; ADDRESS -> -
 	->PUSH 0
-	-->PUSH 4
-	<<<JSR FILL
+	-<STORE 0
+	->PUSH 0
+	-<STORE 1
+	->PUSH 0
+	-<STORE 2
+	->PUSH 0
+	-<STORE 3
+	<POP
 	RET
+
+MINUSONE32:	  ; ADDRESS -> -
+	->PUSH 255
+	-<STORE 0
+	->PUSH 255
+	-<STORE 1
+	->PUSH 255
+	-<STORE 2
+	->PUSH 255
+	-<STORE 3
+    <POP
+    RET
 	
 COPY32:   ; sourceaddr targetaddr -> -
-	>PUSH 0
-	! sourceaddr targetaddr index
-COPY32LOOP:	
-	>GET targetaddr
-	->GET index
-	-<ADD
-	->GET sourceaddr
-	-->GET index
-	--<ADD
-	--LOAD
-	-<STORE
-	<POP
-	INC
-	>PUSH 4
-	-LT
-	<JNZ COPY32LOOP
+	! sourceaddr targetaddr
+	>GET sourceaddr
+	->LOAD 0
+	-<SQUEEZE
+	<STORE 0
+	>GET sourceaddr
+	->LOAD 1
+	-<SQUEEZE
+	<STORE 1
+	>GET sourceaddr
+	->LOAD 2
+	-<SQUEEZE
+	<STORE 2
+	>GET sourceaddr
+	->LOAD 3
+	-<SQUEEZE
+	<STORE 3
 	RETURN 0
 		
 AND32:	; sourceaddr targetaddr  -> -
-	>PUSH 0
-	! sourceaddr targetaddr index
-AND32LOOP:	
-	>GET targetaddr
-	->GET index
-	-<ADD
-	->LOAD
-	-->GET sourceaddr
-	--->GET index
-	---<ADD
-	---LOAD
-	--<AND
-	-<STORE
-	<POP
-	INC
-	>PUSH 4
-	-LT
-	<JNZ AND32LOOP
+	! sourceaddr targetaddr
+	>LOAD 0
+	->GET sourceaddr
+	-->LOAD 0
+	--<SQUEEZE
+	-<AND
+	<STORE 0
+	>LOAD 1
+	->GET sourceaddr
+	-->LOAD 1
+	--<SQUEEZE
+	-<AND
+	<STORE 1
+	>LOAD 2
+	->GET sourceaddr
+	-->LOAD 2
+	--<SQUEEZE
+	-<AND
+	<STORE 2
+	>LOAD 3
+	->GET sourceaddr
+	-->LOAD 3
+	--<SQUEEZE
+	-<AND
+	<STORE 3
 	RETURN 0
 
 OR32:	; sourceaddr targetaddr  -> -
-	>PUSH 0
-	! sourceaddr targetaddr index
-OR32LOOP:	
-	>GET targetaddr
-	->GET index
-	-<ADD
-	->LOAD
-	-->GET sourceaddr
-	--->GET index
-	---<ADD
-	---LOAD
-	--<OR
-	-<STORE
-	<POP
-	INC
-	>PUSH 4
-	-LT
-	<JNZ OR32LOOP
+	! sourceaddr targetaddr
+	>LOAD 0
+	->GET sourceaddr
+	-->LOAD 0
+	--<SQUEEZE
+	-<OR
+	<STORE 0
+	>LOAD 1
+	->GET sourceaddr
+	-->LOAD 1
+	--<SQUEEZE
+	-<OR
+	<STORE 1
+	>LOAD 2
+	->GET sourceaddr
+	-->LOAD 2
+	--<SQUEEZE
+	-<OR
+	<STORE 2
+	>LOAD 3
+	->GET sourceaddr
+	-->LOAD 3
+	--<SQUEEZE
+	-<OR
+	<STORE 3
 	RETURN 0
 
 XOR32:	; sourceaddr targetaddr  -> -
-	>PUSH 0
-	! sourceaddr targetaddr index
-XOR32LOOP:	
-	>GET targetaddr
-	->GET index
-	-<ADD
-	->LOAD
-	-->GET sourceaddr
-	--->GET index
-	---<ADD
-	---LOAD
-	--<XOR
-	-<STORE
-	<POP
-	INC
-	>PUSH 4
-	-LT
-	<JNZ XOR32LOOP
+	! sourceaddr targetaddr
+	>LOAD 0
+	->GET sourceaddr
+	-->LOAD 0
+	--<SQUEEZE
+	-<XOR
+	<STORE 0
+	>LOAD 1
+	->GET sourceaddr
+	-->LOAD 1
+	--<SQUEEZE
+	-<XOR
+	<STORE 1
+	>LOAD 2
+	->GET sourceaddr
+	-->LOAD 2
+	--<SQUEEZE
+	-<XOR
+	<STORE 2
+	>LOAD 3
+	->GET sourceaddr
+	-->LOAD 3
+	--<SQUEEZE
+	-<XOR
+	<STORE 3
 	RETURN 0
 	
 ADD32:  ; sourceaddr targetaddr  -> -
@@ -457,22 +520,26 @@ ADD32LOOP:
 	>GET sourceaddr
 	->GET index
 	-<ADD
-	-LOAD
+	->LOAD 0
+	-<SQUEEZE
 	->GET targetaddr
 	-->GET index
 	--<ADD
-	--LOAD
+	-->LOAD 0
+	--<SQUEEZE
 	-<JSR ADDWITHCARRY
 	->GET targetaddr
 	-->GET index
 	--<ADD
 	-->OVER
-	--<STORE
+	--<STORE 0
 	-<POP
 	<POP
 	>GET index
-	-INC
-	-SET index
+	->PUSH 1
+	-<ADD
+	->DUP
+	-<SET index
 	->PUSH 4
 	-<LT
 	<JNZ ADD32LOOP
@@ -491,7 +558,8 @@ ADDWITHCARRY:   ; carry a b  ->  carry sum
 	<ADD       ; sum up a and b - no overflow can arise
 	>GET carry  ; check if carry is comming in
 	<JZ ADDWITHCARRYISFINISHED   ; when no carry comes in, no overflow can happen (and carry is already cleared)	
-	INC       ; carry did come in, so increase the sum 	
+	>PUSH 1
+	<ADD      ; carry did come in, so increase the sum 	
 	>GET sum  ; when after increasing, the value is 0, there was an overflow (and carry is already set)
 	<JZ ADDWITHCARRYISFINISHED
 	>PUSH 0
@@ -500,7 +568,8 @@ ADDWITHCARRY:   ; carry a b  ->  carry sum
 APLUSBOVERFLOWS:
 	!  carry sum   ; use different stack layout to pop beyond previous limit
 	<ADD		; sum up a and b, ignoring overflow
-	ADD         ; add input carry to total value  (can not cause more total overflow)
+	>ADD         ; add input carry to total value  (can not cause more total overflow)
+	<SQUEEZE
 	>PUSH 1
 	<SET carry   ; output carry must be set
 ADDWITHCARRYISFINISHED:
@@ -514,23 +583,28 @@ ROL32:      ;  distance address  -> -
 	>PUSH 0
 	->GET address
 	--JSR ROLWITHCARRY
-	--INC
+	-->PUSH 1
+	--<ADD
 	--JSR ROLWITHCARRY
-	--INC
+	-->PUSH 1
+	--<ADD
 	--JSR ROLWITHCARRY
-	--INC
+	-->PUSH 1
+	--<ADD
 	--JSR ROLWITHCARRY
 	-<POP
 	->GET address
-	--LOAD
+	-->LOAD 0
+	--<SQUEEZE
 	-<OR
 	->GET address
 	-->OVER
-	--<STORE
+	--<STORE 0
 	-<POP
 	<POP
 	>GET distance
-	-DEC
+	->PUSH 1
+	-<SUB
 	<SET distance
 	JMP ROL32
 ROL32DONE:	
@@ -538,7 +612,7 @@ ROL32DONE:
 	
 ROLWITHCARRY:	  ; carry_in address -> carry_out address
 	! carry address
-	>LOAD
+	>LOAD 0
 	->DUP
 	-->PUSH 1
 	--<LSL
@@ -546,7 +620,7 @@ ROLWITHCARRY:	  ; carry_in address -> carry_out address
 	--<OR
 	-->GET address
 	--->OVER
-	---<STORE
+	---<STORE 0
 	--<POP
 	-<POP
 	->PUSH 7
@@ -554,26 +628,11 @@ ROLWITHCARRY:	  ; carry_in address -> carry_out address
 	<SET carry
 	RETURN 2
 
-FILL:	  ; ADDRESS DATA LENGTH -> -
-	! address data length
-FILLLOOP:
-	DEC
-	>GET address
-	-ADD
-	->GET data
-	-<STORE
-	<POP
-	>GET length
-	<JNZ FILLLOOP
-	RETURN 0
-
 ; ---------- DATA OUTPUT FUNCTIONS ------------
 
 PRINTNEWLINE:
 	>PUSH 10
-	->PUSH 0
-	-<WRITE
-	<POP
+	<WRITE 0
 	RET
 	
 PRINT32:       ;     ADDRESS -> -
@@ -587,11 +646,13 @@ PRINTHEXBUFFER:  ;  ADDRESS LENGTH -> -
 	<JZ PRINTHEXBUFFEREND
 PRINTHEXBUFFERLOOP:	
 	>GET address
-	->LOAD
+	->LOAD 0
 	-<JSR PRINTHEXBYTE
-	-INC
+	->PUSH 1
+	-<ADD
 	<SET address
-	DEC
+	>PUSH 1
+	<SUB
 	>GET length
 	<JNZ PRINTHEXBUFFERLOOP
 PRINTHEXBUFFEREND:	
@@ -599,7 +660,8 @@ PRINTHEXBUFFEREND:
 
 PRINTHEXBYTE:   ;  VALUE  ->  -
 	->PUSH 4
-	--LSR
+	-->LSR
+	--<SQUEEZE
 	-<JSR PRINTHEXDIGIT
 	->PUSH 15
 	-<AND
@@ -607,10 +669,9 @@ PRINTHEXBYTE:   ;  VALUE  ->  -
 	RET
 	
 PRINTHEXDIGIT:  ;  VALUE  ->  -
-	-LOADX HEXDIGITS
-	->PUSH 0
-	-<WRITE
-	<POP
+	->LOADX HEXDIGITS
+	-<SQUEEZE
+	<WRITE 0
 	RET
 	
 HEXDIGITS:

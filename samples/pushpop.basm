@@ -8,9 +8,10 @@
 	>PUSH 17
 	->PUSH 4
 	-<ADD
-	-INC
-	-SET a
-	-INC
+	<SET a
+	>PUSH 1
+	->PUSH 5
+	-<ADD
 	<SET b
 	>GET a
 	<POP
@@ -19,3 +20,5 @@
 	NOP	
 BUSTED:
     JMP BUSTED
+
+	

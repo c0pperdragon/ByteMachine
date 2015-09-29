@@ -13,7 +13,7 @@ public class ByteASM
 {
 	public static void main(String[] args) throws IOException
 	{			
-		String srcfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/pushpop.basm";		
+		String srcfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/md5calc.basm";		
 		String dstfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/quartus/TestProgram.hex";
 
 		PrintStream dest = new PrintStream(new FileOutputStream(dstfilename));
@@ -21,27 +21,23 @@ public class ByteASM
 		dest.close();					
 	}
 	
-	private static String[] opnostackmove = { 
-		"NOP", "CLONE", "ADD", "SUB", "LSL", "LSR", "ASR", "AND", "OR", 
-		"XOR", "LT", "GT", "INC", "DEC"
-	};	 
 	private static String[] opstackpop = { 
-		"<SQEEZE", "<POP", "<ADD", "<SUB", "<LSL", "<LSR", "<ASR", "<AND", "<OR", 
-		"<XOR", "<LT", "<GT", "<INC", "<DEC",
+		"<SQUEEZE", "<POP", "<ADD", "<SUB", "<LSL", "<LSR", "<ASR", "<AND", "<OR", 
+		"<XOR", "<LT", "<GT" // , "<INC", "<DEC",
 	};	 
 	private static String[] opstackpush = { 
 		">DUP", ">OVER", ">ADD", ">SUB", ">LSL", ">LSR", ">ASR", ">AND", ">OR", 
-		">XOR", ">LT", ">GT", ">INC", ">DEC"
+		">XOR", ">LT", ">GT" // , ">INC", ">DEC"
 	};	 
 	private static String[] stackactions =
-	{	">GET", "<SET", "SET"
+	{	">GET", "<SET"
+	};
+	private static String[] parameteractions = {
+		">LOAD", "<STORE", ">READ", "<WRITE" 
 	};
 	private static String[] operationswithaddress = { 
-		"JMP", "<JZ", "<JNZ", "JSR", "LOADX"
+		"JMP", "<JZ", "<JNZ", "JSR", "", ">LOADX"
 	};	 
-	private static String[] parameterlessactions = {
-		"LOAD", ">LOAD", "STORE", "<STORE", "READ", ">READ", "WRITE", "<WRITE" 
-	};
 	
 	public static byte[] assemble(String srcfilename, PrintStream hexfile, PrintStream logfile) throws IOException
 	{
@@ -107,10 +103,14 @@ public class ByteASM
 					{
 						logfile.print(toHex(address,4));						
 						for (int i=0; i<data.length; i++)
-						{	logfile.print(" ");
-							logfile.print(toHex(data[i]&0xff,2));					
+						{	if ((i%4)==0 && i>0)
+							{	logfile.println();
+								logfile.print(toHex(address+i,4));								
+							}				
+							logfile.print(" ");
+							logfile.print(toHex(data[i]&0xff,2));	
 						}				
-						for (int i=data.length; i<4; i++)
+						for (int i=data.length; i==0 || (i%4)!=0; i++)
 						{	logfile.print("   ");
 						}
 						logfile.print(" ");
@@ -164,32 +164,30 @@ public class ByteASM
 		{	operation = operation.substring(1);
 		}
 		
+		if (operation.equals("NOP"))
+		{	
+			return new byte[]{0};
+		}
 		if (operation.equals(">PUSH"))
 		{
 			int v = resolveInt(parameter, constants, error);
 			if (v>=0 && v<=15)
-			{	return new byte[] { (byte) (0x30 | v) };
+			{	return new byte[] { (byte) (0x10 | v) };
 			}
 			else
-			{	return new byte[] { (byte) (0x30 | (v&0x0f)), (byte) (0x40 | ((v>>4)&0x0f)) };
+			{	return new byte[] { (byte) (0x10 | (v&0x0f)), (byte) (0x00 | ((v>>4)&0x0f)) };
 			}				
 		}		
-		for (int i=0; i<opnostackmove.length; i++)
-		{
-			if (operation.equals(opnostackmove[i]))
-			{	return new byte[] { (byte) (0x00 | i) };
-			}		
-		}
 		for (int i=0; i<opstackpop.length; i++)
 		{
 			if (operation.equals(opstackpop[i]))
-			{	return new byte[] { (byte) (0x10 | i) };
+			{	return new byte[] { (byte) (0x20 | i) };
 			}		
 		}
 		for (int i=0; i<opstackpush.length; i++)
 		{
 			if (operation.equals(opstackpush[i]))
-			{	return new byte[] { (byte) (0x20 | i) };
+			{	return new byte[] { (byte) (0x30 | i) };
 			}		
 		}
 		for (int i=0; i<stackactions.length; i++)
@@ -198,37 +196,39 @@ public class ByteASM
 			{	int pos = stackdepth + resolveStackOperand(stacklayout, parameter, error);
 				if (pos<0 || pos>16) error[0] = "Can not address stack position: "+pos;
 				if (pos!=0)
-				{	return new byte[] { (byte) (((0x5+i)<<4) + ((pos-1)&0x0f)) };
+				{	return new byte[] { (byte) (((0x4+i)<<4) + ((pos-1)&0x0f)) };
 				}
 				else 
-				{	if (i==0) return new byte[] { (byte) 0x20 } ;  // >GET 0   =  DUP 	
-					if (i==1) return new byte[] { (byte) 0x10 } ;  // <SET 0   =  SQUEEZE													
-					if (i==2) return new byte[] { } ;              // SET 0   =  NOP													
+				{	if (i==0) return new byte[] { (byte) 0x30 } ;  // >GET 0   =  DUP
+					if (i==1) return new byte[] { (byte) 0x20 } ;  // <SET 0   =  SQUEEZE
 				}							
 			}		
 		}
-		for (int i=0; i<parameterlessactions.length; i++)
+		for (int i=0; i<parameteractions.length; i++)
 		{
-			if (operation.equals(parameterlessactions[i]))
-			{	return new byte[] { (byte) (0xF0 | i) };
+			if (operation.equals(parameteractions[i]))
+			{	return new byte[] { (byte) (((0x6+i)<<4) | (resolveInt(parameter, constants, error)&0x0f)) };
 			}		
 		}
 		for (int i=0; i<operationswithaddress.length; i++)
 		{
 			if (operation.equals(operationswithaddress[i]))
 			{	int target = resolveIdentifier(parameter, labels, constants, error);
-				return new byte[] { (byte) (((0x8+i)<<4) + ((target>>8)&0x0f)), (byte) (target & 0xff) };
+				return new byte[] { (byte) (((0xA+i)<<4) + ((target>>8)&0x0f)), (byte) (target & 0xff) };
 			}					
 		}
 		if (operation.equals("RET"))
 		{
-			return new byte[]{(byte)(0xD0)};
+			return new byte[]{(byte)(0xE0)};
 		}
 		if (operation.equals("RETURN"))
 		{
 			int keep = resolveInt(parameter,null,error);
 			int pop = stacklayout.size() + stackdepth - keep;
-			return new byte[]{(byte)(0xD0 | pop)};
+			byte[] code = new byte[pop+1];
+			for (int i=0; i<code.length; i++) code[i] = (byte) 0x21;
+			code[pop] = (byte)0xE0;
+			return code;
 		}
 		
 		if (operation.equals("DATA"))
@@ -292,6 +292,11 @@ public class ByteASM
 		
 	private static int resolveInt(String o, HashMap<String,Integer> constants, String[] error)
 	{
+		if (o==null)
+		{	error[0] = "Parameter required";
+			return 0;
+		}
+		
 		int idx = o.lastIndexOf("+");
 		if (idx>0)
 		{

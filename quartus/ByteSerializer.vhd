@@ -45,7 +45,7 @@ begin
 						outbits(9) := '1';   -- stop bit
 						outbits(10) := '1';  -- idle time
 						bitstowrite := 11;
-						holdcounter := clockdivider-1;
+						holdcounter := clockdivider;
 						ack := true;      
 					else
 						ack := false;    -- block ack until data is transmitted
