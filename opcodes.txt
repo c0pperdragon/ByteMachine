@@ -1,100 +1,212 @@
-The CPU fetches instructions from a dedicated read-only instruction memory with an address
-width of 12 bit and data width of 8 bit (4096 bytes maximum). 
+Overview
 
-Most instructions operate on the operand stack with new values being permanently pushed on top of 
-the stack, or values being popped off. In each situation, the topmost element in the stack is called
-operand(0), the next element below is called operand(1) and so on. A push will change the stack in a 
-way that all values are pushed from operand(n) to operand(n+1). operand(0) will get a new value according
-to the definiton of the instruction. A pop will move all values up the stack: operand(n) is moved to operand(n-1).
-The value of operand(0) must be discarded, but it can be overwritten by the instruction according to its definition.
-Some instructions can modify the stack without actually doing pushes or pops.
+The CPU fetches instructions from a dedicated read-only instruction memory of
+up to 64K Bytes. All instructions take exactly one clock cycle and work
+on an operand stack by pushing/popping data to/from the stack and perform any
+kind of operations directly with the values of the stack.
 
-A dedicated 256 byte read-write memory is available to store arbitrary data which can be addressed with a pointer.
-Machine instructions are either one-byte (for most computations) or two-byte (for jumps and ROM access).
-A return stack is independently maintained for use of JSR / RET.
+The main memory consists of 1K Bytes and is mainly used for the operand stack
+and the lower 256 Bytes can also be accessed using indexed addressing.
 
-The general type of the instruction is defined by the higher 4 bits of the first byte:
+Because the design is aimed on squeezing all instructions into a single byte
+and execute them in a single clock, these instructions are very low-level 
+and you often need more instructions than you would need 
+for the same thing in a more complex CPU design.
 
-    0p  NOP or Add High Bits 
-        Uses p as high 4 bits which are then ORed to the 4 high bits of operand(0).
+
+Architecture
+
+                     Clock
+                       |
+                       V
+           RAM <->  ByteCPU  <->  Program ROM
+                      |  ^ 
+                      V  |
+                      Ports
+                       
+  RAM .. 1KByte, dual ported: asynchronous read, synchronous write
+  ROM .. up to 64KByte. single ported, asynchronous read
+  IO ... up to 16 input and 16 output lines: individually addressable
+
+
+CPU Registers
+
+Nearly all of the program state is maintained in the main memory that is 
+attached to the CPU but a few things need to be directly stored in the CPU:
+
+   PC  .. Program counter, 16 bit. Holds address of current instruction. 
+          Is directly wired to the address input of the program ROM.
+
+   SP ... Stack pointer, 10 bit. Holds the address of the memory location that
+          corresponds to the operand second-from-top of the operand stack. 
+          Initialized to 255 at start-up, to avoid the indexed ram segment.
+          Will normally feed the RAM read address, but sometimes other RAM 
+          addresses are read instead.
+
+   A .... Top stack element, 8 bit. The topmost element of the stack is not located in
+          RAM, but directly in the CPU. This register will normally receive 
+          the results of calculations. When stack pushes are performed, the
+          previous value of A needs to be stored into RAM before A is 
+          overwritten by a new value.
+
+   OUT .. The values of the output pins, up to 16 bit. 
+          This register directly drives the output ports.
+
+
+Instructions
+
+The general type of the instruction is defined by the higher 4 bits of the first byte
+with the lower 4 bits specifying the operation in more detail.
+To make the operation more clear, the effects on the registers and the memory (written as
+M[..]) will be specified in sequential pseudo-code. 
+Jump instructions will also effect the program counter in a different way than
+just increasing it by 1 (this will be explicitly stated).
+
+
+    0c  HIGH c
+        Add high bits    (works as no-op when p=0)
+        Uses c as high 4 bits which are then ORed to the 4 high bits of the top stack operand.
         This instruction will normally be used in conjunction with PUSH to bring a full 
         byte to the operand stack.
+            A(4..7) := A(4..7) or c
 
-    1p  PUSH p    
-        Uses p as an unsigned 4-bit value and pushes a byte with this value on top of the stack            
+    1c  PUSH c   
+        Uses c as an unsigned 4-bit value and pushes a byte with this value on top of the stack
+            SP := SP+1
+            M[SP] := A
+            A := c
 
-    2o  Operations with popping the stack
-             operand(1) and operand(0) are combined to get a result value. Then the stack is popped by
-             one element, and then operand(0) is overwritten with the result value.
-        20  <SQUEEZE result = operand(0)
-        21  <POP     result = operand(1)
-        22  <ADD     result = operand(1) + operand(0)
-        23  <SUB     result = operand(1) - operand(0)
-        24  <LSL     result = operand(1) << operand(0)
-        25  <LSR     result = operand(1) >>> operand(0)
-        26  <ASR     result = operand(1) >> operand(0)
-        27  <AND     result = operand(1) & operand(0)
-        28  <OR      result = operand(1) | operand(0)
-        29  <XOR     result = operand(1) ^^ operand(0)
-        2A  <LT      result = 1 when operand(1)<operand(0)  , 0 otherwise
-        2B  <GT      result = 1 when operand(1)>operand(0)  , 0 otherwise
+    2o  OP o
+        ALU operations with popping the stack
+        The two top-most operands are combined according to the operation
+        and replaced with the result, in effect reducing the stack size.
+            A := M[SP] <o> A
+            SP := SP-1
 
-    3o  Operations with pushing the stack
-                operand(1) and operand(0) are combined to get a new value for operand(0).
-                The result is pushed on top of the stack.
-        30  >DUP     result = operand(0)
-        31  >OVER    result = operand(1)
-        32  >ADD     result = operand(1) + operand(0)
-        33  >SUB     result = operand(1) - operand(0)
-        34  >LSL     result = operand(1) << operand(0)
-        35  >LSR     result = operand(1) >>> operand(0)
-        36  >ASR     result = operand(1) >> operand(0)
-        37  >AND     result = operand(1) & operand(0)
-        38  >OR      result = operand(1) | operand(0)
-        39  >XOR     result = operand(1) ^^ operand(0)
-        3A  >LT      result = 1 when operand(1)<operand(0)  , 0 otherwise
-        3B  >GT      result = 1 when operand(1)>operand(0)  , 0 otherwise
+    3o  OPX o 
+        ALU operations with pushing the stack
+        The two top-most operands are combined according to the operation
+        and the result is pushed on top of the stack, in effect increasing
+        the stack size.
+            TMP := M[SP] <o> A
+            SP := SP+1
+            M[SP] := A
+            A := TMP
               
-    4p  >GET p
-        Fetch the value of operand(p+1) from the operand stack and push it on top.
+    4p  GET p
+        Fetch a value from a deeper position of the operand stack and push it on top.
+            TMP := M[SP-p-1]
+            SP := SP+1
+            M[SP] := A
+            A := TMP
+
+    5p  SET p
+        Pop off a value from the stack, and then overwrite a deeper stack position with 
+        this value;
+            M[SP-p-2] := A
+            A := M[SP]
+            SP := SP-1
+
+    6x  LOAD x
+        Uses top operand as RAM address, adds x to it, and fetches a byte from there.
+        Pushes this byte on the stack.
+            TMP := M[A+x]
+            SP := SP+1
+            M[SP] := A
+            A := TMP
+
+    7x  STORE x
+        Uses top operand as RAM address, adds the value of x to it and stores the 
+        operand on second-from-top position to the resulting location.
+        Top operand is then popped off the stack.
+            TMP := M[SP]
+            M[A+x] := TMP
+            SP := SP-1
+            A := TMP
+
+    8x  WRITEBIT x
+        Sets the output pin x to the value of the lowermost bit 0 the top stack operand.
+        Top operand is then popped off the stack.
+            OUT(x) := A(0)
+            A := M[SP]
+            SP := SP-1
+ 
+    9X  READBIT x
+        Gets the value of the input pin and pushes this value (0 or 1) on top of the
+        operand stack
+            SP := SP+1
+            M[SP] := A
+            A := INPUTPIN(x)
     
-    5p  <SET p
-        Pop off a value from the stack, and then overwrite operand(p+1) with this value.
+    Ax  BZ x
+        Pops off the top element and causes a relative forward jump if the value is 0.
+            TMP := A
+            A := M[SP]
+            SP := SP-1
+            if TMP=0 then
+                PC := PC + x + 2
+            else
+                PC := PC + 1 
+            endif
 
-    6x  >LOAD o
-	Uses top operand as RAM address, adds the value of o to it and fetches a byte from there.
-	Pushes this byte on the stack.
-	
-    7x  <STORE o
-	Uses operand(1) as RAM address, adds the value of o to it and stores the 
-        operand(0) to the resulting location.
-        Top operand ist then popped off the stack.
+    Bx  BNZ x
+        Pops off the top element and causes a relative forward jump if the value is not 0.
+            TMP := A
+            A := M[SP]
+            SP := SP-1
+            if TMP<>0 then
+                PC := PC + x + 2
+            else
+                PC := PC + 1 
+            endif
 
-    8x  >READ x
- 	Reads one byte from the port x (blocking read) and puts it on stop of the stack.
+    Cx  JMP x
+        Pops off the top element and combines it with the value of x to form either 
+        a relative forward or relative backward jump address.
+            TMP := A
+            A := M[SP]
+            SP := SP-1
+            if x(0) = 0 then   // forward
+                PC := PC + TMP*8 + x(1..3)
+            else               // backward
+                PC := PC - TMP*8 - x(1..3)
+            endif
 
-    9x  <WRITE x
-	Writes the value of operand(0) to the port x (blocking write). Top operand is popped.
+    Dx  SUB x
+        Uses the two top-most operands together with x to create the target jump address.
+        These operands are then replaced with the address of the instruction right after 
+        this one (to allow returning from subroutines). There is no explicit
+        return operation, because SUB can be used for this purpose when x=0.                
+            TMP0 := M[SP]
+            TMP0(4..7) := TMP0(4..7) or x
+            TMP1 := A
+            TMPPC := PC+1
+            M[SP] := TMPPC (0..7)
+            A := TMPPC(8..15)
+            PC := TMP0 + 256*TMP1
 
-    Am mm JMP
-        Continue program at the instruction memory location mmm  
-         
-    Bm mm <JZ
-        Pops off operand(0) and if is 0, the program will continue execution at instruction memory location mmm
-        (otherwise just continue after the instruction)
+
+Arithmetic and logic operations
+
+All arithmetic and logic operations work on two 8 bit operands to produce
+an 8 bit result. The instruction set allows up to 16 possible operations, but
+not all are used to keep the design slim and to allow future expandability.
+In this list, X and Y will denote the first and second operand and Z the result.
+
+   0    FIRST        Z = X
+   1    SECOND       Z = Y
+   2    ADD          Z = X + Y     (addition modulo 256)
+   3    SUB          Z = X - Y     (subtraction modulo 256)
+   4    AND          Z = X and Y   (bitwise and operation)
+   5    OR           Z = X or Y    (bitwise or operation)
+   6    XOR          Z = X xor Y   (bitwise xor operation)   
         
-    Cm mm <JNZ
-        Pops off operand(0) and if it is anything but 0, the program will continue execution at instruction memory location mmm
-        (otherwise just continue after the instruction)
-    
-    Dm mm JSR
-        Pushes the location of the instruction after the JSR onto the return stack
-        and continues execution at instruction memory location mmm. 
+        LSL     result = operand(1) << operand(0)
+        LSR     result = operand(1) >>> operand(0)
+        ASR     result = operand(1) >> operand(0)      
+        
+        LT           Z = 1, if X < Y  (0, otherwise)
+        GT           Z = 1, if X > Y  (0, otherwise)
+        OVFL         Z = 1, if X+Y>255 (0, otherwise)  test for overflow
+        
 
-    Ex RET 
-	Pops top element from the address stack and continues execution there.
-	
-    Fm mm >LOADX
-        Use the value of operand(0) as an offset to the instruction memory address mmn and load a byte from there.
-	Pushes the byte on top of the stack.
-	
