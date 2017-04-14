@@ -93,52 +93,49 @@ just increasing it by 1 (this will be explicitly stated).
             M[SP] := A
             A := TMP
               
-    4p  GET p
+    4p  GET stackbase-p
         Fetch a value from a deeper position of the operand stack and push it on top.
-            TMP := M[SP-p-1]
+            TMP := M[SP-1-p]
             SP := SP+1
             M[SP] := A
             A := TMP
 
-    5p  SET p
-        Pop off a value from the stack, and then overwrite a deeper stack position with 
-        this value;
-            M[SP-p-2] := A
+    5p  SET stackbase-p
+        Pop off the top value from the stack, and overwrite a deeper stack position 
+        with this value.
+            M[SP-1-p] := A
             A := M[SP]
             SP := SP-1
 
     6x  LOAD x
         Uses top operand as RAM address, adds x to it, and fetches a byte from there.
-        Pushes this byte on the stack.
-            TMP := M[A+x]
-            SP := SP+1
-            M[SP] := A
-            A := TMP
+        Replace top operand with this byte.
+            A := M[A+x]
 
     7x  STORE x
         Uses top operand as RAM address, adds the value of x to it and stores the 
-        operand on second-from-top position to the resulting location.
+        operand that is on second-from-top position to the resulting location.
         Top operand is then popped off the stack.
             TMP := M[SP]
             M[A+x] := TMP
             SP := SP-1
             A := TMP
 
-    8x  WRITEBIT x
-        Sets the output pin x to the value of the lowermost bit 0 the top stack operand.
-        Top operand is then popped off the stack.
-            OUT(x) := A(0)
-            A := M[SP]
-            SP := SP-1
- 
-    9X  READBIT x
+    8X  READBIT x
         Gets the value of the input pin and pushes this value (0 or 1) on top of the
         operand stack
             SP := SP+1
             M[SP] := A
             A := INPUTPIN(x)
-    
-    Ax  BZ x
+
+    9x  WRITEBIT x
+        Sets the output pin x to the value of bit 0 of the top stack operand.
+        Top operand is then popped off the stack.
+            OUT(x) := A(0)
+            A := M[SP]
+            SP := SP-1
+ 
+    Ax  JZ x
         Pops off the top element and causes a relative forward jump if the value is 0.
             TMP := A
             A := M[SP]
@@ -149,7 +146,7 @@ just increasing it by 1 (this will be explicitly stated).
                 PC := PC + 1 
             endif
 
-    Bx  BNZ x
+    Bx  JNZ x
         Pops off the top element and causes a relative forward jump if the value is not 0.
             TMP := A
             A := M[SP]
@@ -185,6 +182,12 @@ just increasing it by 1 (this will be explicitly stated).
             A := TMPPC(8..15)
             PC := TMP0 + 256*TMP1
 
+    Ex  POP x+1   
+        Pops x+1 elements from the operand stack.
+            SP := SP-x
+            A:=M[SP]
+            SP := SP-1
+
 
 Arithmetic and logic operations
 
@@ -193,20 +196,15 @@ an 8 bit result. The instruction set allows up to 16 possible operations, but
 not all are used to keep the design slim and to allow future expandability.
 In this list, X and Y will denote the first and second operand and Z the result.
 
-   0    FIRST        Z = X
-   1    SECOND       Z = Y
-   2    ADD          Z = X + Y     (addition modulo 256)
-   3    SUB          Z = X - Y     (subtraction modulo 256)
-   4    AND          Z = X and Y   (bitwise and operation)
-   5    OR           Z = X or Y    (bitwise or operation)
-   6    XOR          Z = X xor Y   (bitwise xor operation)   
-        
-        LSL     result = operand(1) << operand(0)
-        LSR     result = operand(1) >>> operand(0)
-        ASR     result = operand(1) >> operand(0)      
-        
-        LT           Z = 1, if X < Y  (0, otherwise)
-        GT           Z = 1, if X > Y  (0, otherwise)
-        OVFL         Z = 1, if X+Y>255 (0, otherwise)  test for overflow
-        
-
+    0   FIRST        Z = X
+    1   SECOND       Z = Y
+    2   ADD          Z = X + Y     (addition modulo 256)
+    3   SUB          Z = X - Y     (subtraction modulo 256)
+    4   AND          Z = X and Y   (bitwise and operation)
+    5   OR           Z = X or Y    (bitwise or operation)
+    6   XOR          Z = X xor Y   (bitwise xor operation)   
+    7   SHL          Z = (X << 1) & Y(7)   (shift left
+    8   SHR          Z = Y(7) & (X >> 1)   (shift right)
+    9   LT           Z = 1, if X < Y  (0, otherwise)
+    10  GT           Z = 1, if X > Y  (0, otherwise)
+    11  OVFL         Z = 1, if X+Y>255 (0, otherwise)  test for overflow

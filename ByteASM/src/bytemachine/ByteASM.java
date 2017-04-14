@@ -2,392 +2,317 @@ package bytemachine;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.HashSet;
 
 public class ByteASM 
 {
 	public static void main(String[] args) throws IOException
 	{			
-		String srcfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/md5calc.basm";		
-		String dstfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/quartus/TestProgram.hex";
+		String srcfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/pushpop.basm";		
+//		String dstfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/quartus/TestProgram.hex";
 
-		PrintStream dest = new PrintStream(new FileOutputStream(dstfilename));
-		ByteASM.assemble(srcfilename,dest,System.out);
-		dest.close();					
+		byte[] code = ByteASM.assemble(srcfilename,System.out);
+		if (code!=null) {
+			ByteASM.generateSimpleDump(code, System.out);
+//			 dest = new PrintStream(new FileOutputStream(dstfilename));		
+//			dest.close();					
+		}
 	}
 	
-	private static String[] opstackpop = { 
-		"<SQUEEZE", "<POP", "<ADD", "<SUB", "<LSL", "<LSR", "<ASR", "<AND", "<OR", 
-		"<XOR", "<LT", "<GT" // , "<INC", "<DEC",
-	};	 
-	private static String[] opstackpush = { 
-		">DUP", ">OVER", ">ADD", ">SUB", ">LSL", ">LSR", ">ASR", ">AND", ">OR", 
-		">XOR", ">LT", ">GT" // , ">INC", ">DEC"
-	};	 
-	private static String[] stackactions =
-	{	">GET", "<SET"
-	};
-	private static String[] parameteractions = {
-		">LOAD", "<STORE", ">READ", "<WRITE" 
-	};
-	private static String[] operationswithaddress = { 
-		"JMP", "<JZ", "<JNZ", "JSR", "", ">LOADX"
-	};	 
-	
-	public static byte[] assemble(String srcfilename, PrintStream hexfile, PrintStream logfile) throws IOException
+	public static byte[] assemble(String srcfilename, PrintStream logfile) throws IOException
 	{
-		int counterrors = 0;
-		ByteArrayOutputStream code = new ByteArrayOutputStream();			
 		HashMap<String,Integer> labels = new HashMap<String,Integer>(); 	
+		HashMap<String,Integer> constants = new HashMap<String,Integer>();
+		ByteArrayOutputStream code = new ByteArrayOutputStream();
 		
-		for (int phase=0; phase<2; phase++)
+		for (int phase=0; ; phase++)
 		{
-			Vector<String[]> stacklayout = new Vector<String[]>();
-			HashMap<String,Integer> constants = new HashMap<String,Integer>();
-			int address = 0;
+			if (logfile!=null) logfile.println("Phase "+phase);
+
+			code.reset();		
+				
+			constants.clear();
+			constants.put ("FIRST", Integer.valueOf(0));
+			constants.put ("SECOND", Integer.valueOf(1));
+			constants.put ("ADD", Integer.valueOf(2));
+			constants.put ("SUB", Integer.valueOf(3));
+			constants.put ("AND", Integer.valueOf(4));
+			constants.put ("OR", Integer.valueOf(5));
+			constants.put ("XOR", Integer.valueOf(6));
+			constants.put ("SHL", Integer.valueOf(7));
+			constants.put ("SHR", Integer.valueOf(8));
+			constants.put ("LT", Integer.valueOf(9));
+			constants.put ("GT", Integer.valueOf(10));
+			constants.put ("OVFL", Integer.valueOf(11));
 			
+			boolean anylabelchanged = false;
+			int counterrors = 0;
+					
+			HashSet<String> phaselabels = new HashSet<String>();			
 			ByteParser parser = new ByteParser(new FileInputStream(srcfilename));
 			while (parser.nextLine())
 			{
-				HashMap<String,Integer> phaselabels = new HashMap<String,Integer>();
-				 	
+				String error = null;
+			
+				String t = parser.getAssignmentTarget();
 				String l = parser.getLabel();
-				if (l!=null)
-				{	labels.put(l, Integer.valueOf(address));
-					if (phaselabels.containsKey(l))
-					{	System.err.println("Douplicate label: "+l);
-						counterrors++;
-					}
-					phaselabels.put(l, 0);
-				}								
-
-				String[] error = new String[1];		
-				if (parser.getAssignmentTarget()!=null)
+				String o = parser.getOperation();
+				String p = parser.getParameter();
+				
+				// handle constant definitions
+				if (t!=null)
 				{	
 					parser.getParameter();
 					try 
-					{	constants.put(parser.getAssignmentTarget(), Integer.valueOf(parser.getParameter()));
+					{	constants.put(t, Integer.valueOf(parser.getParameter()));
 					} catch (Exception e)
-					{	error[0] = e.getMessage();
+					{	error = e.getMessage();
 					}
 				}
-				 								
-				byte[] data = assembleLine(parser.getOperation(), parser.getParameter(), 
-					phase==1?labels:null, stacklayout, constants, error);
-						
-				if (phase==1)
-				{	
-					if (hexfile!=null)
-					{	
-						for (int i=0; i<data.length; i++)
-						{	int checksum = 0;
-							hexfile.print(":");
-							hexfile.print(toHex(1,2));
-							checksum += 1;
-							hexfile.print(toHex(address+i,4));
-							checksum += (address+i) & 0xff;
-							checksum += ((address+i)>>8) & 0xff;
-							hexfile.print(toHex(0,2));
-							checksum += 0;
-							hexfile.print(toHex(data[i]&0xff,2));
-							checksum += data[i] & 0xff;
-							hexfile.println(toHex(((~checksum)+1)&0xff,2));
-						}
+				// handle labels
+				else if (l!=null)
+				{	Integer a = Integer.valueOf(code.size());
+					if (!a.equals(labels.get(l))) { 
+						anylabelchanged=true; 
+						labels.put(l,a);
 					}
-					if (logfile!=null)
-					{
-						logfile.print(toHex(address,4));						
-						for (int i=0; i<data.length; i++)
-						{	if ((i%4)==0 && i>0)
-							{	logfile.println();
-								logfile.print(toHex(address+i,4));								
-							}				
-							logfile.print(" ");
-							logfile.print(toHex(data[i]&0xff,2));	
-						}				
-						for (int i=data.length; i==0 || (i%4)!=0; i++)
-						{	logfile.print("   ");
-						}
-						logfile.print(" ");
-						logfile.println(parser.getLine());
+					if (phaselabels.contains(l))
+					{	error = "Doublicate label: "+l;
+					}
+					phaselabels.add(l);
+				}					
+				// handle code line
+				else if (o!=null && o.length()>0)
+				{	try 
+					{	assembleLine(labels,constants,code, o, p, phase>0);
+					}
+					catch (Exception e) 
+					{	error = e.getMessage();
 					}	
-					code.write(data);				
-
-					if (error[0]!=null)
-					{
-						System.out.println("ERROR: "+error[0]);		
-						counterrors++;	
-					}
-				}	
-			
-				address += data.length;
+				}
 				
+				// print and count detected errors
+				if (error!=null) 
+				{	if (logfile!=null) 
+					{	logfile.println("Line: "+parser.getLine()+" Error: "+error);
+					}
+					counterrors++;
+				}				
 			}
-					
-			if (phase==1 && hexfile!=null)
-			{	hexfile.println(":00000001FF");
+
+			parser.close();	
+			
+			if (counterrors>0)
+			{	System.err.println("Errors during compilation: "+counterrors);
+				return null;
 			}
-		}		
-		
-		if (counterrors>0)
-		{	System.err.println("Error during compilation: "+counterrors);
-			return null;
+			
+			// test if this phase is the last one (no unstable labels anymore)
+			if (!anylabelchanged) break;		
 		}
+	
 		return code.toByteArray();
 	}
 	
-	private static byte[] assembleLine(String operation, String parameter, 
-		HashMap<String,Integer> labels, Vector<String[]> stacklayout,
-		HashMap<String,Integer> constants, String[] error)
+	private static void assembleLine(
+		HashMap<String,Integer> labels,
+		HashMap<String,Integer> constants,
+		ByteArrayOutputStream code, 
+		String operation, String parameter, boolean subsequentpass)
+		throws Exception
 	{
+		int pc = code.size();
+		int stackbase = -3;
+		
 		if (operation==null || operation.length()<1)
-		{	return new byte[0];
+		{	throw new Exception("Instruction expected");
 		}
 		
-		if (operation.equals("!"))
-		{		
-			parseStackLayout(stacklayout, parameter, error);
-			return new byte[0];
-		}		
-		
-		int stackdepth = 0;
-		while (operation.startsWith("-"))
-		{	if (operation.startsWith("-")) stackdepth++;
-			operation=operation.substring(1);
-		}
-		while ((operation.startsWith("<") || operation.startsWith(">")) && operation.endsWith("JSR"))
-		{	operation = operation.substring(1);
+		// trim stack depth hints
+		while (operation.length()>0) {
+			char c = operation.charAt(0);
+			if (!(c=='<' || c=='>' || c=='-')) break;
+			if (c=='-' || c=='<') stackbase++;
+			operation = operation.substring(1);
 		}
 		
-		if (operation.equals("NOP"))
-		{	
-			return new byte[]{0};
+		// create opcodes
+		if (operation.equals("HIGH"))
+		{	code.write( 0x00 | resolveInt(parameter, constants, 0,15));
 		}
-		if (operation.equals(">PUSH"))
-		{
-			int v = resolveInt(parameter, constants, error);
-			if (v>=0 && v<=15)
-			{	return new byte[] { (byte) (0x10 | v) };
+		else if (operation.equals("PUSH"))
+		{	code.write( 0x10 | resolveInt(parameter, constants, 0,15));
+		}
+		else if (operation.equals("CONST"))
+		{	int v = resolveInt(parameter, constants, 0,255);
+			if (v<=15) 
+			{	code.write( 0x10 | v);
 			}
 			else
-			{	return new byte[] { (byte) (0x10 | (v&0x0f)), (byte) (0x00 | ((v>>4)&0x0f)) };
-			}				
+			{	code.write( 0x10 | (v & 0xf));
+				code.write( 0x00 | (v >> 4) );
+			}
+		}
+		else if (operation.equals("OP")) 
+		{	code.write( 0x20 | resolveInt(parameter, constants, 0,15));
+		}
+		else if (operation.equals("OP2")) 
+		{	code.write( 0x30 | resolveInt(parameter, constants, 0,15));
+		}
+		else if (operation.equals("GET")) 
+		{	int p = stackbase-resolveInt(parameter, constants, stackbase-15,stackbase+2);
+			if (p==-2) {
+				code.write( 0x31 ); // OP2 SECOND
+			} else if (p==-1) {
+				code.write( 0x30 ); // OP2 FIRST
+			} else {
+				code.write( 0x40 | p);
+			}
+		}
+		else if (operation.equals("SET")) 
+		{	int p = stackbase-resolveInt(parameter, constants, stackbase-15,stackbase+1);
+			if (p==-1) {
+				code.write( 0x21 ); // OP SECOND
+			} else {
+				code.write( 0x50 | p);
+			}
+		}
+		else if (operation.equals("LOAD")) 
+		{	code.write( 0x60 | resolveInt(parameter, constants, 0,15));
+		}
+		else if (operation.equals("STORE")) 
+		{	code.write( 0x70 | resolveInt(parameter, constants, 0,15));
+		}
+		else if (operation.equals("READBIT")) 
+		{	code.write( 0x80 | resolveInt(parameter, constants, 0,15));
+		}
+		else if (operation.equals("WRITEBIT")) 
+		{	code.write( 0x90 | resolveInt(parameter, constants, 0,15));
+		}
+		else if (operation.equals("JZ") || operation.equals("JNZ")) 
+		{	int a = resolveLabel(parameter, labels, subsequentpass);
+			int rel = (a<0) ? 0 : a-pc;
+			if (rel<2 || rel>2+15) throw new Exception("Jump target out of range");
+			code.write( (operation.equals("JZ")?0xA0:0xB0) | (rel-2));
+		}
+		else if (operation.equals("JMP")) 
+		{	int a = resolveLabel(parameter, labels, subsequentpass);
+			int rel = (a<0) ? 0 : a-(pc+2);
+			if (rel<-2045 || rel>2045) throw new Exception("Jump target out of range");
+			int x = (rel>=0) ? (rel*2) : ((-rel)*2 + 1);
+			code.write( 0x10 | ((x>>4)&0xf) );
+			code.write( 0x00 | ((x>>8)&0xf) );
+			code.write( 0xC0 | ((x>>0)&0xf) );
+		}
+		else if (operation.equals("SUB")) 
+		{	int a = resolveLabel(parameter, labels, subsequentpass);
+			if (a<0) a=0;
+			code.write( 0x10 | ((a>>8)&0xf) );
+			code.write( 0x00 | ((a>>12)&0xf) );
+			code.write( 0x10 | ((a>>0)&0xf) );
+			code.write( 0xD0 | ((a>>4)&0xf) );
+		}
+		else if (operation.equals("RET")) {		
+			code.write( 0xD0 );
+		}
+		else if (operation.equals("POP")) 		
+		{	code.write( 0xE0 | (resolveInt(parameter, constants, 1,16)-1));
+		}
+		else {
+			throw new Exception("Unknown command: "+operation);
 		}		
-		for (int i=0; i<opstackpop.length; i++)
-		{
-			if (operation.equals(opstackpop[i]))
-			{	return new byte[] { (byte) (0x20 | i) };
-			}		
-		}
-		for (int i=0; i<opstackpush.length; i++)
-		{
-			if (operation.equals(opstackpush[i]))
-			{	return new byte[] { (byte) (0x30 | i) };
-			}		
-		}
-		for (int i=0; i<stackactions.length; i++)
-		{
-			if (operation.equals(stackactions[i]))
-			{	int pos = stackdepth + resolveStackOperand(stacklayout, parameter, error);
-				if (pos<0 || pos>16) error[0] = "Can not address stack position: "+pos;
-				if (pos!=0)
-				{	return new byte[] { (byte) (((0x4+i)<<4) + ((pos-1)&0x0f)) };
-				}
-				else 
-				{	if (i==0) return new byte[] { (byte) 0x30 } ;  // >GET 0   =  DUP
-					if (i==1) return new byte[] { (byte) 0x20 } ;  // <SET 0   =  SQUEEZE
-				}							
-			}		
-		}
-		for (int i=0; i<parameteractions.length; i++)
-		{
-			if (operation.equals(parameteractions[i]))
-			{	return new byte[] { (byte) (((0x6+i)<<4) | (resolveInt(parameter, constants, error)&0x0f)) };
-			}		
-		}
-		for (int i=0; i<operationswithaddress.length; i++)
-		{
-			if (operation.equals(operationswithaddress[i]))
-			{	int target = resolveIdentifier(parameter, labels, constants, error);
-				return new byte[] { (byte) (((0xA+i)<<4) + ((target>>8)&0x0f)), (byte) (target & 0xff) };
-			}					
-		}
-		if (operation.equals("RET"))
-		{
-			return new byte[]{(byte)(0xE0)};
-		}
-		if (operation.equals("RETURN"))
-		{
-			int keep = resolveInt(parameter,null,error);
-			int pop = stacklayout.size() + stackdepth - keep;
-			byte[] code = new byte[pop+1];
-			for (int i=0; i<code.length; i++) code[i] = (byte) 0x21;
-			code[pop] = (byte)0xE0;
-			return code;
-		}
-		
-		if (operation.equals("DATA"))
-		{
-			return parseData(1, parameter,constants,error);
-		}
-		if (operation.equals("DATA32"))
-		{
-			return parseData(4, parameter,constants,error);
-		}
-				
-		error[0] = "Unknown operation: "+operation;		
-		return new byte[0];
 	}				
 
-	private static void parseStackLayout(Vector<String[]> stacklayout, String parameter, String[] error)
+
+	private static int resolveInt(String o, HashMap<String,Integer> constants, int minvalue, int maxvalue) throws Exception
 	{
-		stacklayout.clear();
-		if (parameter!=null) 		
-		{	for (StringTokenizer tok = new StringTokenizer(parameter); tok.hasMoreTokens(); )
-			{	
-				String s = tok.nextToken();
-				if (s.indexOf("/")<0)
-				{	stacklayout.insertElementAt( new String[]{s}, 0 );
-				}
-				else
-				{
-					StringTokenizer t2 = new StringTokenizer(s,"/");
-					String[] sa = new String[t2.countTokens()];
-					for (int i=0; i<sa.length; i++)
-					{	sa[i] = t2.nextToken();
-					}
-					stacklayout.insertElementAt(sa,0);
-				}
-			}
-	}
-//		System.out.print("Stacklayout: ");
-//		for (String[] sa: stacklayout)
-//		{
-//			for (String s:sa)
-//			{	System.out.print(s+"|");
-//			}
-//			System.out.print(" ");
-//		}
-//		System.out.println();
-	}
-	
-	private static int resolveStackOperand(Vector<String[]> stacklayout, String parameter, String[] error)
-	{
-		for (int i=0; i<stacklayout.size(); i++)		
-		{	String[] s = stacklayout.elementAt(i);
-			for (int j=0; j<s.length; j++)
-			{	if (s[j].equals(parameter))
-				{	return i;
-				}
-			}			
-		}
-		error[0] = "Unknown stack position: "+parameter;
-		return 0;
-	}	
+		int value;
 		
-	private static int resolveInt(String o, HashMap<String,Integer> constants, String[] error)
-	{
-		if (o==null)
-		{	error[0] = "Parameter required";
-			return 0;
+		if (o==null || o.length()<1)
+		{	throw new Exception("Parameter expected");
 		}
-		
+
 		int idx = o.lastIndexOf("+");
 		if (idx>0)
 		{
-			int b = resolveInt(o.substring(idx+1).trim(), constants, error);
-			int a = resolveInt(o.substring(0,idx).trim(), constants, error);
-			return a+b;
+			int b = resolveInt(o.substring(idx+1).trim(), constants, Integer.MIN_VALUE, Integer.MAX_VALUE);
+			int a = resolveInt(o.substring(0,idx).trim(), constants, Integer.MIN_VALUE, Integer.MAX_VALUE);
+			value = a+b;
 		}
-	
-	
-		if (constants!=null && constants.containsKey(o))
-		{	return constants.get(o).intValue();
+		else if (o.startsWith("0x") || o.startsWith("0X"))
+		{	value = (int) Long.parseLong(o.substring(2),16);		
 		}
-		try
-		{	if (o.startsWith("0x") || o.startsWith("0X"))
-			{	return (int) Long.parseLong(o.substring(2),16);		
-			}
-			return (int) Long.parseLong(o);
+		else if (o.charAt(0)>='0' && o.charAt(0)<='9') 
+		{	value = (int) Long.parseLong(o);
 		}
-		catch (Exception e) {}		
-		error[0] = "Can not read number: "+o;
-		return 0;
+		else if (constants!=null && constants.containsKey(o))
+		{	value = constants.get(o).intValue();
+		}
+		else 
+		{	throw new Exception("Unknown constant: "+o);
+		}
+		
+		if (value<minvalue || value>maxvalue) 
+		{	throw new Exception("Number out of range");			
+		}
+		return value;
 	}		
 		
-	private static int resolveIdentifier(String l, HashMap<String,Integer> labels, HashMap<String,Integer> constants, String[] error)
+	private static int resolveLabel(String l, HashMap<String,Integer> labels, boolean required) throws Exception
 	{
-		if (labels==null)
-		{	return 0;
+		if (l==null || l.length()<1)
+		{	throw new Exception("Label expected");
 		}
-		int idx = l.indexOf("+");
-		if (idx>0)
-		{
-			int a = resolveIdentifier(l.substring(0,idx).trim(), labels, constants, error);
-			int b = resolveInt(l.substring(idx+1).trim(), constants, error);			
-			return a+b;
-		}
-		idx = l.indexOf("-");
-		if (idx>0)
-		{
-			int a = resolveIdentifier(l.substring(0,idx).trim(), labels, constants, error);
-			int b = resolveInt(l.substring(idx+1).trim(), constants, error);			
-			return a-b;
-		}
-		
+				
 		Integer i = labels.get(l);
 		if (i==null)
-		{	error[0] = "Unresolved identifier: "+l;			
-			return 0;		
+		{	if (!required) return -1;			
+			throw new Exception("Unresolved label: l");
+		} 
+		else 
+		{	return i.intValue();
 		}
-		return i.intValue();
+	}	
+
+	static void generateSimpleDump(byte[] data, PrintStream outfile) 
+	{
+		for (int address=0; address<data.length; address+=16) {
+			int n = Math.min(data.length-address, 16);
+			for (int i=0; i<n; i++) {
+				outfile.print(toHex(data[address+i]&0xff,2));
+				outfile.print(" ");
+			}
+			outfile.println();
+		}
+	}
+
+
+	static void generateIntelHexFormat(byte[] data, PrintStream hexfile) 
+	{
+		for (int address=0; address<data.length; address+=16) {
+			int n = Math.min(data.length-address, 16);
+			int checksum = 0;
+			hexfile.print(":");
+			hexfile.print(toHex(n,2));
+			checksum += n;
+			hexfile.print(toHex(address,4));
+			checksum += (address) & 0xff;
+			checksum += ((address)>>8) & 0xff;
+			hexfile.print(toHex(0,2));
+			checksum += 0;
+			for (int i=0; i<n; i++) {
+				hexfile.print(toHex(data[address+i]&0xff,2));
+				checksum += data[i] & 0xff;
+			}
+			hexfile.println(toHex(((~checksum)+1)&0xff,2));
+		}
+		hexfile.println(":00000001FF");
 	}	
 	
-	private static byte[] parseData(int datawidth, String parameter, HashMap<String,Integer> constants, String[] error)
-	{
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		
-		while (parameter.length()>0)
-		{	if (parameter.charAt(0)=='"')
-			{	int idx = parameter.indexOf('"',1);
-				if (idx<0)
-				{	System.err.println("Unterminated string");
-					break;
-				}
-				for (int i=1; i<idx; i++)
-				{	bos.write ( (byte) (parameter.charAt(i) & 0xff) );
-				}
-				parameter = parameter.substring(idx+1,parameter.length()).trim();
-			}
-			else
-			{	int idx = parameter.indexOf(" ");
-				if (idx<0)									
-				{	int v = resolveInt(parameter, constants,error);
-					for (int i=0; i<datawidth; i++)
-					{	bos.write(v&0xff);
-						v = v>>>8;
-					} 
-					break;
-				}
-				else
-				{	int v = resolveInt(parameter.substring(0,idx), constants, error);
-					for (int i=0; i<datawidth; i++)
-					{	bos.write(v&0xff);
-						v = v>>>8;
-					} 
-					parameter=parameter.substring(idx).trim();
-				}
-			}
-		}
-		
-		return bos.toByteArray();
-	}
-		
+				
 	private static String toHex(int n, int digits)
 	{
 		String h = "";
@@ -404,8 +329,6 @@ public class ByteASM
 		}
 		return h;
 	}
-	
-	
 	
 }
 

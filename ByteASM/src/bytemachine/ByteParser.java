@@ -9,6 +9,7 @@ public class ByteParser
 {
 	private BufferedReader reader;
 
+	private int currentLineNumber = 0;
 	private String currentLine = "";
 	private String currentOperation = null;
 	private String currentParameter = null;
@@ -25,9 +26,9 @@ public class ByteParser
 		reader.close();
 	}
 	
-	public String getLine()
+	public int getLine()
 	{		
-		return currentLine;
+		return currentLineNumber;
 	}
 	public String getOperation()
 	{
@@ -65,12 +66,15 @@ public class ByteParser
 		{	return false;
 		}
 		
+		currentLineNumber++;
 		String l = currentLine;
-		// trim away comment
+		// trim away comment and leading/trailing empty spaces
 		int idx = l.indexOf(';');   
 		if (idx>=0)
 		{	l = l.substring(0,idx);			
 		}
+		l = l.trim();
+		
 		// check if this is an assignment
 		idx = l.indexOf('=');
 		if (idx>0)
@@ -78,7 +82,6 @@ public class ByteParser
 			currentParameter = l.substring(idx+1).trim();
 			return true;		
 		}
-		
 		
 		// find and extract instruction label
 		idx = l.indexOf(':');

@@ -1,24 +1,29 @@
-; Simple program for testing push and pops
-	>PUSH 0
-	->PUSH 1
-	-->PUSH 2
-	--->PUSH 3
-	---->PUSH 4
-	! a b x y z
-	>PUSH 17
-	->PUSH 4
-	-<ADD
-	<SET a
-	>PUSH 1
-	->PUSH 5
-	-<ADD
-	<SET b
-	>GET a
-	<POP
-	>GET b
-	<POP
-	NOP	
-BUSTED:
-    JMP BUSTED
-
-	
+; Simple program for testing push/pops and
+; set/get together with labelled stack addressing
+    >CONST 55
+    ->CONST 2
+    -->CONST 42
+    --->CONST 62
+    ---->CONST 99
+    a = 0  ; stack layout
+    b = 1
+    x = 2
+    y = 3
+    z = 4 
+    ----->GET x
+    -----<SET x
+    ----->GET x
+    ------>GET y
+    ------<OP ADD
+    -----<SET a
+    ----->GET z
+    ------>CONST 5
+    ------->OP2 SUB
+    -------<SET b
+    -----<<POP 2
+    ----->GET a
+    -----<POP 1
+    ----->GET b
+    <<<<<<POP 6
+END:
+    JMP END
