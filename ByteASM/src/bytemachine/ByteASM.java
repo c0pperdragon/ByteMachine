@@ -11,7 +11,7 @@ public class ByteASM
 {
 	public static void main(String[] args) throws IOException
 	{			
-		String srcfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/pushpop.basm";		
+		String srcfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/fibonacci.basm";		
 //		String dstfilename = "C:/Users/Reinhard/Documents/GitHub/ByteMachine/quartus/TestProgram.hex";
 
 		byte[] code = ByteASM.assemble(srcfilename,System.out);
@@ -32,21 +32,8 @@ public class ByteASM
 		{
 			if (logfile!=null) logfile.println("Phase "+phase);
 
-			code.reset();		
-				
+			code.reset();						
 			constants.clear();
-			constants.put ("FIRST", Integer.valueOf(0));
-			constants.put ("SECOND", Integer.valueOf(1));
-			constants.put ("ADD", Integer.valueOf(2));
-			constants.put ("SUB", Integer.valueOf(3));
-			constants.put ("AND", Integer.valueOf(4));
-			constants.put ("OR", Integer.valueOf(5));
-			constants.put ("XOR", Integer.valueOf(6));
-			constants.put ("SHL", Integer.valueOf(7));
-			constants.put ("SHR", Integer.valueOf(8));
-			constants.put ("LT", Integer.valueOf(9));
-			constants.put ("GT", Integer.valueOf(10));
-			constants.put ("OVFL", Integer.valueOf(11));
 			
 			boolean anylabelchanged = false;
 			int counterrors = 0;
@@ -125,7 +112,7 @@ public class ByteASM
 		throws Exception
 	{
 		int pc = code.size();
-		int stackbase = -3;
+		int stackbase = -1;
 		
 		if (operation==null || operation.length()<1)
 		{	throw new Exception("Instruction expected");
@@ -135,19 +122,19 @@ public class ByteASM
 		while (operation.length()>0) {
 			char c = operation.charAt(0);
 			if (!(c=='<' || c=='>' || c=='-')) break;
-			if (c=='-' || c=='<') stackbase++;
+			if (c=='-') stackbase++;
 			operation = operation.substring(1);
 		}
 		
 		// create opcodes
-		if (operation.equals("HIGH"))
-		{	code.write( 0x00 | resolveInt(parameter, constants, 0,15));
+		if (operation.equals("EXT"))
+		{	code.write( 0x00 | resolveInt(parameter, constants, 0,15, stackbase));
 		}
-		else if (operation.equals("PUSH"))
-		{	code.write( 0x10 | resolveInt(parameter, constants, 0,15));
+		else if (operation.equals("DAT"))
+		{	code.write( 0x10 | resolveInt(parameter, constants, 0,15, stackbase));
 		}
-		else if (operation.equals("CONST"))
-		{	int v = resolveInt(parameter, constants, 0,255);
+		else if (operation.equals("DATA"))
+		{	int v = resolveInt(parameter, constants, 0,255, stackbase);
 			if (v<=15) 
 			{	code.write( 0x10 | v);
 			}
@@ -157,48 +144,32 @@ public class ByteASM
 			}
 		}
 		else if (operation.equals("OP")) 
-		{	code.write( 0x20 | resolveInt(parameter, constants, 0,15));
+		{	code.write( 0x20 | resolveOperator(parameter));
 		}
-		else if (operation.equals("OP2")) 
-		{	code.write( 0x30 | resolveInt(parameter, constants, 0,15));
+		else if (operation.equals("OPP")) 
+		{	code.write( 0x30 | resolveOperator(parameter));
 		}
 		else if (operation.equals("GET")) 
-		{	int p = stackbase-resolveInt(parameter, constants, stackbase-15,stackbase+2);
-			if (p==-2) {
-				code.write( 0x31 ); // OP2 SECOND
-			} else if (p==-1) {
-				code.write( 0x30 ); // OP2 FIRST
-			} else {
-				code.write( 0x40 | p);
-			}
+		{	int p = resolveInt(parameter, constants, 0,15, stackbase);
+			code.write( 0x40 | p);
 		}
 		else if (operation.equals("SET")) 
-		{	int p = stackbase-resolveInt(parameter, constants, stackbase-15,stackbase+1);
-			if (p==-1) {
-				code.write( 0x21 ); // OP SECOND
-			} else {
-				code.write( 0x50 | p);
-			}
+		{	int p = resolveInt(parameter, constants, 0,15, stackbase);
+			code.write( 0x50 | p);
 		}
-		else if (operation.equals("LOAD")) 
-		{	code.write( 0x60 | resolveInt(parameter, constants, 0,15));
+		else if (operation.equals("LOD")) 
+		{	code.write( 0x60 | resolveInt(parameter, constants, 0,15, stackbase));
 		}
-		else if (operation.equals("STORE")) 
-		{	code.write( 0x70 | resolveInt(parameter, constants, 0,15));
+		else if (operation.equals("STO")) 
+		{	code.write( 0x70 | resolveInt(parameter, constants, 0,15, stackbase));
 		}
-		else if (operation.equals("READBIT")) 
-		{	code.write( 0x80 | resolveInt(parameter, constants, 0,15));
+		else if (operation.equals("IN")) 
+		{	code.write( 0x80 | resolveInt(parameter, constants, 0,15, stackbase));
 		}
-		else if (operation.equals("WRITEBIT")) 
-		{	code.write( 0x90 | resolveInt(parameter, constants, 0,15));
+		else if (operation.equals("OUT")) 
+		{	code.write( 0x90 | resolveInt(parameter, constants, 0,15, stackbase));
 		}
-		else if (operation.equals("JZ") || operation.equals("JNZ")) 
-		{	int a = resolveLabel(parameter, labels, subsequentpass);
-			int rel = (a<0) ? 0 : a-pc;
-			if (rel<2 || rel>2+15) throw new Exception("Jump target out of range");
-			code.write( (operation.equals("JZ")?0xA0:0xB0) | (rel-2));
-		}
-		else if (operation.equals("JMP")) 
+		else if (operation.equals("JUMP")) 
 		{	int a = resolveLabel(parameter, labels, subsequentpass);
 			int rel = (a<0) ? 0 : a-(pc+2);
 			if (rel<-2045 || rel>2045) throw new Exception("Jump target out of range");
@@ -207,7 +178,13 @@ public class ByteASM
 			code.write( 0x00 | ((x>>8)&0xf) );
 			code.write( 0xC0 | ((x>>0)&0xf) );
 		}
-		else if (operation.equals("SUB")) 
+		else if (operation.equals("JZ") || operation.equals("JNZ")) 
+		{	int a = resolveLabel(parameter, labels, subsequentpass);
+			int rel = (a<0) ? 2 : a-pc;
+			if (rel<2 || rel>2+15) throw new Exception("Jump target out of range");
+			code.write( (operation.equals("JZ")?0xA0:0xB0) | (rel-2));
+		}
+		else if (operation.equals("CALL")) 
 		{	int a = resolveLabel(parameter, labels, subsequentpass);
 			if (a<0) a=0;
 			code.write( 0x10 | ((a>>8)&0xf) );
@@ -215,31 +192,38 @@ public class ByteASM
 			code.write( 0x10 | ((a>>0)&0xf) );
 			code.write( 0xD0 | ((a>>4)&0xf) );
 		}
-		else if (operation.equals("RET")) {		
-			code.write( 0xD0 );
+		else if (operation.equals("RET")) {	
+			code.write( 0xE0 | resolveInt(parameter, constants, 0,15, stackbase));	
 		}
-		else if (operation.equals("POP")) 		
-		{	code.write( 0xE0 | (resolveInt(parameter, constants, 1,16)-1));
-		}
-		else {
-			throw new Exception("Unknown command: "+operation);
+		else if (operation.equals("ADR")) 		
+		{	code.write( 0xF0 | resolveInt(parameter, constants, 0,15, stackbase));
+		}		
+		else 
+		{	throw new Exception("Unknown command: "+operation);
 		}		
 	}				
 
 
-	private static int resolveInt(String o, HashMap<String,Integer> constants, int minvalue, int maxvalue) throws Exception
+	private static int resolveInt(String o, HashMap<String,Integer> constants, 
+		int minvalue, int maxvalue, int stackbase) throws Exception
 	{
 		int value;
-		
+		boolean isrelativetostackbase=false;
+				
 		if (o==null || o.length()<1)
 		{	throw new Exception("Parameter expected");
+		}
+		
+		if (o.startsWith("!")) {
+			o=o.substring(1).trim();
+			isrelativetostackbase = true;
 		}
 
 		int idx = o.lastIndexOf("+");
 		if (idx>0)
 		{
-			int b = resolveInt(o.substring(idx+1).trim(), constants, Integer.MIN_VALUE, Integer.MAX_VALUE);
-			int a = resolveInt(o.substring(0,idx).trim(), constants, Integer.MIN_VALUE, Integer.MAX_VALUE);
+			int b = resolveInt(o.substring(idx+1).trim(), constants, Integer.MIN_VALUE, Integer.MAX_VALUE, stackbase);
+			int a = resolveInt(o.substring(0,idx).trim(), constants, Integer.MIN_VALUE, Integer.MAX_VALUE, stackbase);
 			value = a+b;
 		}
 		else if (o.startsWith("0x") || o.startsWith("0X"))
@@ -255,8 +239,12 @@ public class ByteASM
 		{	throw new Exception("Unknown constant: "+o);
 		}
 		
+		if (isrelativetostackbase) {
+			value = stackbase - value;
+		}
+		
 		if (value<minvalue || value>maxvalue) 
-		{	throw new Exception("Number out of range");			
+		{	throw new Exception("Number out of range: "+value);			
 		}
 		return value;
 	}		
@@ -277,6 +265,20 @@ public class ByteASM
 		}
 	}	
 
+	static int resolveOperator(String parameter) throws Exception {
+		if (parameter.equals("POP")) return 0;
+		if (parameter.equals("ADD")) return 1;
+		if (parameter.equals("SUB")) return 2;
+		if (parameter.equals("AND")) return 3;
+		if (parameter.equals("OR"))  return 4;
+		if (parameter.equals("XOR")) return 5;
+		if (parameter.equals("LT"))  return 6;
+		if (parameter.equals("GT"))  return 7;
+		if (parameter.equals("SHL")) return 8;
+		if (parameter.equals("SHR")) return 9;
+		throw new Exception("Unknown operator: "+parameter);
+	}
+
 	static void generateSimpleDump(byte[] data, PrintStream outfile) 
 	{
 		for (int address=0; address<data.length; address+=16) {
@@ -288,7 +290,6 @@ public class ByteASM
 			outfile.println();
 		}
 	}
-
 
 	static void generateIntelHexFormat(byte[] data, PrintStream hexfile) 
 	{

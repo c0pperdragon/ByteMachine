@@ -1,0 +1,27 @@
+; Simple implementation of the fibonacci sequence.
+; Numbers are generated up to 8bit length and sent to
+; output port 0.
+
+START:
+; initial values on stack
+>DATA 0
+->DATA 1
+        
+LOOP:        
+; send current element to output port 0
+-->GET !1
+--<OUT 0
+
+; add and replace on stack
+-->OPP ADD
+--->GET !1
+---<SET !0
+--<SET !1
+    
+; check if the values are still increasing - continue
+-->OPP LT
+--<JZ END
+--JUMP LOOP
+    
+END:
+--JUMP END
