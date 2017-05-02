@@ -1,7 +1,7 @@
 The Byte Machine - Instructions
 
 The CPU fetches instructions from a dedicated read-only instruction memory with an address
-width of 12 bit and data width of 8 bit (4096 instructions maximum) and operate 
+width of 16 bit and data width of 8 bit (65536 instructions maximum) and operate 
 on a read-write memory of 256 bytes (M).
 The instruction set is optimized to allow for every instruction to fit into one
 byte and to be executed in one clock. To achieve this, the instructions are quite low-level
@@ -22,7 +22,7 @@ any possible combination. Note that the memory will not be cleared on reset, so 
 to take care to set all relevant memory regions to a defined state.
 
 
-The general type of the instructions is defined by the higher 4 bits of the first byte, and
+The general type of the instructions is defined by the higher 4 bits of the instruction byte, and
 the lower 4 bits specify a parameter:
 
     0x  EXT x
@@ -84,10 +84,10 @@ the lower 4 bits specify a parameter:
             SP--
 
     Ax  JMP x
-        Pops the top stack element and combines its value with x to form a jump target address.
-        Continue program at v*16 + x
-            PC = M[SP]*16 + x
-            SP--            
+        Pops the top stack element and combines its value with x to form a relative jump target address.
+            rel = M[SP]*16 + x
+            PC = PC + ((sign extended) rel)
+            SP--
          
     Bx  JZ x
         Pops off top operand and if this is 0, the program will jump forward by x+2 instructions
@@ -104,30 +104,34 @@ the lower 4 bits specify a parameter:
             SP--
     
     Dx  JSR x
-        Pops the top stack element and combines its value with x to form a jump target address.
+        Pops the two top stack elements and combines their values with x to form a jump target address.
         Then the address of the instruction after this one will be pushed onto the stack
         (low byte first, then high byte). Execution continues then at the jump target.
-            target = M[SP]*16 + x
-            M[SP] = (PC+1)%256
-            M[SP+1] = (PC+1)/256
-            SP++
+            target = M[SP-1] + M[SP]*256 + (x*16)
+            M[SP-1] = (PC+1)%256
+            M[SP]   = (PC+1)/256
             PC = target
 
     Ex RET x
-        Pops two top elements from the stack and combines them to form the jump target.
-        Then x (may be 0) more elements are popped from the stack and discarded.
-        Then a single 0-byte is again pushed on the stack. Program execution
-        continues at the jump target.
+        The two top elements from the stack are combined to form the jump target.
+        Then x (may be 0) elements are popped from the stack and discarded.
+        Then the top stack element is replaced by the high byte of the jump target.
+        Program execution continues at the jump target.
             PC = M[SP-1] + M[SP]*256
-            SP = SP-2-x
-            M[SP] = 0
-            SP++            
-        This meaningless pushing of a single 0-byte is an artefact of the internal
+            SP = SP-x
+            M[SP] = PC/256;
+        This meaningless replacement of the top element is an artefact of the internal
         working of the CPU and its communication with the RAM and the fact that
         it is not possible to retrieve two bytes in a single clock. Normally this
         means that the caller of a subroutine needs to immediately discard this 
-        unused filler byte (This will automatically be taken care of by the CALL assembler
+        unused byte (This will automatically be taken care of by the CALL assembler
         instruction).
+        This instruction can also be used to perfrom a total CPU halt: RET 0 will leave the
+        operand stack unaltered, and if the address is this instruction itself, the 
+        CPU will endlessly jump to the same instruction without altering any of the
+        internal registers, in fact causing a total stop of all activity (besides the
+        incomming clock).
+
 
     Fx ADR x
         Computes the memory address of a stack position a given distance down in the stack

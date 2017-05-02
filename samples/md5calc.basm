@@ -1,65 +1,89 @@
 ; Implementation of an MD5 checksum computation with the ByteMachine.
 ; It is pretty cumbersome to work with 32 bit integers, but it can be 
 ; done even with this simple instruction set and without a carry flag.
-; The output should be: 0f8b13e30bf9c0195964561732be6cc6
+; So this implementation works as a proof that such complex operations
+; can indeed be implemented with this instruction set.
+; The example output should be: 0f8b13e30bf9c0195964561732be6cc6
 
-; ----------- RAM LAYOUT ----------------
-	A0 = 0         ; 32 bit
-  	B0 = 4         ; 32 bit
-	C0 = 8         ; 32 bit
-	D0 = 12        ; 32 bit	   	 
-	M  = 16        ; 16x32 bit blocks of message data
-	BITLENGTH = 80 ; 32 bit
-	A = 84		   ; 32 bit
-	B = 88         ; 32 bit
-	C = 92         ; 32 bit
-	D = 96         ; 32 bit
-	K = 100        ; 32 bit
-	F = 104        ; 32 bit
-	CONSTANT8 = 108 ; 32 bit (constant value 8)
-	LENGTH = 112   ;  8 bit  (length currently collect in block)
-; -------------MD5 EXAMPLE USAGE -------------
+; ----------- RAM INITIALIZATION AND STARTUP -------------
+A0 = 0         ; 32 bit
+	DATA32 0
+B0 = 4         ; 32 bit
+	DATA32 0
+C0 = 8         ; 32 bit
+	DATA32 0
+D0 = 12        ; 32 bit	   	 
+	DATA32 0
+M  = 16        ; 16x32 bit block of message data
+	DATA32 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+LENGTH = 80   ;  8 bit, data currently collected in M
+	DATA 0
+BITLENGTH = 81 ; 32 bit, total length of message in bits
+	DATA32 0
+A = 85		   ; 32 bit, temporary
+	DATA32 0
+B = 89         ; 32 bit, temporary
+	DATA32 0
+C = 93         ; 32 bit, temporary
+	DATA32 0
+D = 97         ; 32 bit, temporary
+	DATA32 0
+K = 101        ; 32 bit, temporary
+	DATA32 0
+F = 105        ; 32 bit, temporary
+	DATA32 0
+	
+	CALL MAIN
+	HALT
+	
+; ------------------- MD5 EXAMPLE USAGE -------------
 MAIN:
-	JSR MD5INIT	
-	JSR APPENDEXAMPLETEXT	
-	JSR MD5FINISH
-	JSR MD5PRINT
-OVER:
-	JMP OVER
+; stack-in: (ret1,ret2)
+--CALL MD5INIT	
+--CALL APPENDEXAMPLETEXT	
+--CALL MD5FINISH
+--CALL MD5PRINT
+<<RETURN
 
 APPENDEXAMPLETEXT:
-	>PUSH 0      
-	! i 
-LOOPEXAMPLETEXT:
-    >GET i
-    ->LOADX EXAMPLETEXT 
-	-<SQUEEZE
-	->DUP
-    -<JNZ HAVELETTER
-	<POP	
-	RETURN 0
-HAVELETTER:	
-    <JSR MD5APPEND
-	>PUSH 1
-	<ADD
-    JMP LOOPEXAMPLETEXT
+; stack-in: (ret1,ret2)
+-->>>>>>>>>>>>>DATA 12 "Mary had a l"
+--<<<<<<<<<<<<<CALL APPENDBYTES
+-->>>>>>>>>>>>>DATA 12 "ittle lamb, "
+--<<<<<<<<<<<<<CALL APPENDBYTES
+-->>>>>>>>>>>>>DATA 12 "His fleece w"
+--<<<<<<<<<<<<<CALL APPENDBYTES
+-->>>>>>>>>>>>>DATA 12 "as white as "
+--<<<<<<<<<<<<<CALL APPENDBYTES
+-->>>>>>>>>>>>>DATA 12 "snow, And ev"
+--<<<<<<<<<<<<<CALL APPENDBYTES
+-->>>>>>>>>>>>>DATA 12 "erywhere tha"
+--<<<<<<<<<<<<<CALL APPENDBYTES
+-->>>>>>>>>>>>>DATA 12 "t Mary went,"
+--<<<<<<<<<<<<<CALL APPENDBYTES
+-->>>>>>>>>>>>>DATA 12 " The lamb wa"
+--<<<<<<<<<<<<<CALL APPENDBYTES
+-->>>>>>>>>>>>>DATA 12 "s sure to go"
+--<<<<<<<<<<<<<CALL APPENDBYTES
+-->>>>>>>>>>>>>DATA 1 ".xxxxxxxxxxxx"
+--<<<<<<<<<<<<<CALL APPENDBYTES
+<<RETURN
 
-	
-; ---------- EXAMPLE TEXT
-EXAMPLETEXT:
-	DATA "Mary had a little lamb, His fleece was white as snow, And everywhere that Mary went, The lamb was sure to go." 
-	DATA 0
-	
-	
+APPENDBYTES:
+; stack-in: num b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 (ret1,ret2)
+--------------->ADR !1
+---------------->GET !0
+---------------<<CALL MD5APPEND
+<<<<<<<<<<<<<<<RETURN
+
+
 ; ---------- CONSTANT DATA --------------
-STARTVALUES:	DATA32 0x67452301
-                DATA32 0xEFCDAB89
-             	DATA32 0x98BADCFE
-                DATA32 0x10325476
+				
 s : DATA 7 12 17 22  7 12 17 22  7 12 17 22  7 12 17 22
     DATA 5  9 14 20  5  9 14 20  5  9 14 20  5  9 14 20
     DATA 4 11 16 23  4 11 16 23  4 11 16 23  4 11 16 23
     DATA 6 10 15 21  6 10 15 21  6 10 15 21  6 10 15 21
+	
 k : DATA32 0xd76aa478 0xe8c7b756 0x242070db 0xc1bdceee
 	DATA32 0xf57c0faf 0x4787c62a 0xa8304613 0xfd469501
 	DATA32 0x698098d8 0x8b44f7af 0xffff5bb1 0x895cd7be
@@ -81,71 +105,82 @@ k : DATA32 0xd76aa478 0xe8c7b756 0x242070db 0xc1bdceee
 ; -------------- MD5 COMPUTATION -------------
 
 MD5INIT:
-	>PUSH A0
-MD5INITLOOP:	
-	->LOADX STARTVALUES-A0
-	-<STORE 0
-	->PUSH 1
-	-<ADD
-	->PUSH A0+16
-	-->LT
-	--<SQUEEZE
-	-<JNZ MD5INITLOOP
-	<POP	
-	>PUSH BITLENGTH
-	<JSR ZERO32	
-	>PUSH LENGTH
-	->PUSH 0
-	-<STORE	0
-	<POP
-	>PUSH CONSTANT8
-	<JSR ZERO32
-	>PUSH CONSTANT8
-	->PUSH 8
-	-<STORE	0
-	<POP
-	RET
-	
-MD5APPEND:   ;  DATABYTE  -> -
-	->PUSH 1
-	<<JSR MD5APPENDCHECKCOUNTER
-	RET
+; stack-in: (ret1,ret2)
+-->>>>DATA32 0x67452301
+------>DATA A0
+--<<<<<CALL INIT32
+-->>>>DATA32 0x0xEFCDAB89
+------>DATA B0
+--<<<<<CALL INIT32
+-->>>>DATA32 0x98BADCFE
+------>DATA C0
+--<<<<<CALL INIT32
+-->>>>DATA32 0x10325476
+------>DATA D0
+--<<<<<CALL INIT32
+-->>>>DATA32 0
+------>DATA BITLENGTH
+--<<<<<CALL INIT32
+-->DATA 0
+--->DATA LENGTH
+---<STO
+--<OP POP
+<<RETURN
+
+MD5APPEND: 
+; stack-in: address, length, (ret1,ret2)
+---->GET !1
+----<JNZ MD5APPENDCONTINUE
+<<<<RETURN
+MD5APPENDCONTINUE:
+---->GET !0
+-----LOD
+----->DATA 1
+----<<CALL MD5APPENDCHECKCOUNTER
+---->GET !0
+----->DATA 1
+-----<OP ADD
+----<SET !0
+---->GET !1
+----->DATA 1
+-----<OP SUB
+----<SET !1
+----JMP MD5APPEND
 
 MD5FINISH:
-	>PUSH 128
-	->PUSH 0
-	<<JSR MD5APPENDCHECKCOUNTER
+; stack-in: (ret1,ret2)
+-->>DATA 128 0
+--<<CALL MD5APPENDCHECKCOUNTER
 MD5FINISHLOOP:
-	>PUSH LENGTH
-	->LOAD 0
-	-<SQUEEZE
-	->PUSH 56
-	-<XOR
-	<JZ MD5FINISHLOOPEND
-	>PUSH 0
-	->PUSH 0
-	<<JSR MD5APPENDCHECKCOUNTER
-	JMP MD5FINISHLOOP
+-->DATA LENGTH
+---LOD 0
+--->PUSH 56
+---<XOR
+--<JZ MD5FINISHLOOPEND
+-->>DATA 0 0
+--<<CALL MD5APPENDCHECKCOUNTER
+--JMP MD5FINISHLOOP
 MD5FINISHLOOPEND:	
-	>PUSH BITLENGTH
-	->PUSH M+56
-	<<JSR COPY32
-	>PUSH M+60
-	<JSR ZERO32
-	JSR MD5COMPUTEBLOCK
-	RET
+-->>DATA BITLENGTH M+56
+--<<CALL COPY32
+-->>>>DATA32 0
+------>DATA M+60
+--<<<<<CALL INIT32
+--JSR MD5COMPUTEBLOCK
+<<RETURN
 	
 MD5PRINT:
-	>PUSH A0
-	<JSR PRINT32
-	>PUSH B0
-	<JSR PRINT32
-	>PUSH C0
-	<JSR PRINT32
-	>PUSH D0
-	<JSR PRINT32
-	<JSR PRINTNEWLINE
-	RET
+; stack-in: (ret1,ret2)
+-->DATA A0
+--<CALL PRINT32
+-->DATA B0
+--<CALL PRINT32
+-->DATA C0
+--<CALL PRINT32
+-->DATA D0
+--<CALL PRINT32
+--CALL PRINTNEWLINE
+<<RETURN
 
 MD5APPENDCHECKCOUNTER:  ;  DATABYTE INCREASECOUNTER -> -
 	! databyte
@@ -275,8 +310,9 @@ COMPUTEBLOCKLOOP32:
 	-<SQUEEZE
 	<JNZ COMPUTEBLOCKLOOP32
 COMPUTEBLOCKLOOP48:
-	>PUSH F
-	<JSR MINUSONE32
+---->>>>DATA32 0xffffffff
+-------->DATA F
+	<CALL COPY32
 	>PUSH D
 	->PUSH F
 	<<JSR XOR32
@@ -384,49 +420,36 @@ MD5ROUND:   ;   i g  ->
 	
 ; ---------- COMPUTATION AND MOVEMENT PRIMITIVES ---------
 
-ZERO32:	  ; ADDRESS -> -
-	->PUSH 0
-	-<STORE 0
-	->PUSH 0
-	-<STORE 1
-	->PUSH 0
-	-<STORE 2
-	->PUSH 0
-	-<STORE 3
-	<POP
-	RET
+INIT32:
+; stack-in: b0 b1 b2 b3 target (ret1,ret2)
+------->ADR !0
+-------->GET !4
+-------<<CALL COPY32
+<<<<<<<RETURN
 
-MINUSONE32:	  ; ADDRESS -> -
-	->PUSH 255
-	-<STORE 0
-	->PUSH 255
-	-<STORE 1
-	->PUSH 255
-	-<STORE 2
-	->PUSH 255
-	-<STORE 3
-    <POP
-    RET
-	
-COPY32:   ; sourceaddr targetaddr -> -
-	! sourceaddr targetaddr
-	>GET sourceaddr
-	->LOAD 0
-	-<SQUEEZE
-	<STORE 0
-	>GET sourceaddr
-	->LOAD 1
-	-<SQUEEZE
-	<STORE 1
-	>GET sourceaddr
-	->LOAD 2
-	-<SQUEEZE
-	<STORE 2
-	>GET sourceaddr
-	->LOAD 3
-	-<SQUEEZE
-	<STORE 3
-	RETURN 0
+COPY32:
+; stack-in: source, target (ret1,ret2)
+---->GET !0
+-----LOD 0
+----->GET !1
+-----<STO 0
+----<OP POP
+---->GET !0
+-----LOD 1
+----->GET !1
+-----<STO 1
+----<OP POP
+---->GET !0
+-----LOD 2
+----->GET !1
+-----<STO 2
+----<OP POP
+---->GET !0
+-----LOD 3
+----->GET !1
+-----<STO 3
+----<OP POP
+<<<<RETURN
 		
 AND32:	; sourceaddr targetaddr  -> -
 	! sourceaddr targetaddr
@@ -512,168 +535,211 @@ XOR32:	; sourceaddr targetaddr  -> -
 	<STORE 3
 	RETURN 0
 	
-ADD32:  ; sourceaddr targetaddr  -> -
-	>PUSH 0
-	->PUSH 0
-	! sourceaddr targetaddr index carry
-ADD32LOOP:		
-	>GET sourceaddr
-	->GET index
-	-<ADD
-	->LOAD 0
-	-<SQUEEZE
-	->GET targetaddr
-	-->GET index
-	--<ADD
-	-->LOAD 0
-	--<SQUEEZE
-	-<JSR ADDWITHCARRY
-	->GET targetaddr
-	-->GET index
-	--<ADD
-	-->OVER
-	--<STORE 0
-	-<POP
-	<POP
-	>GET index
-	->PUSH 1
-	-<ADD
-	->DUP
-	-<SET index
-	->PUSH 4
-	-<LT
-	<JNZ ADD32LOOP
-	RETURN 0
-
-ADDWITHCARRY:   ; carry a b  ->  carry sum
-	! carry a/sum b
-	; detect if a+b itself would produce an overflow
-	>GET a
-	->GET b
-	-->PUSH 255
-	--<XOR
-	-<GT
-	<JNZ APLUSBOVERFLOWS
-	!  carry/carry sum   ; use different stack layout to pop beyond previous limit
-	<ADD       ; sum up a and b - no overflow can arise
-	>GET carry  ; check if carry is comming in
-	<JZ ADDWITHCARRYISFINISHED   ; when no carry comes in, no overflow can happen (and carry is already cleared)	
-	>PUSH 1
-	<ADD      ; carry did come in, so increase the sum 	
-	>GET sum  ; when after increasing, the value is 0, there was an overflow (and carry is already set)
-	<JZ ADDWITHCARRYISFINISHED
-	>PUSH 0
-	<SET carry   ; output carry must be cleared
-	RETURN 2
-APLUSBOVERFLOWS:
-	!  carry sum   ; use different stack layout to pop beyond previous limit
-	<ADD		; sum up a and b, ignoring overflow
-	>ADD         ; add input carry to total value  (can not cause more total overflow)
-	<SQUEEZE
-	>PUSH 1
-	<SET carry   ; output carry must be set
-ADDWITHCARRYISFINISHED:
-	RETURN 2
+; -- subroutine to add a 32-bit value to another
+;  input stack:  source-address, target-address, (ret1,ret2)
+;  output stack: overflow
+source = 0
+target = 1    
+overflow = 0
+ADD32:    
+---->DAT 0  ; carry flag
+----->GET !source   
+------LOD 0  
+------>GET !target  
+-------LOD 0  
+------<CALL FULLADD
+------>GET !target  
+------<STO 0 
+-----<OP POP
+----->GET !source
+------LOD 1  
+------>GET !target
+-------LOD 1  
+------<CALL FULLADD
+------>GET !target   
+------<STO 1 
+-----<OP POP
+----->GET !source
+------LOD 2  
+------>GET !target
+-------LOD 2  
+------<CALL FULLADD
+------>GET !target   
+------<STO 2 
+-----<OP POP
+----->GET !source
+------LOD 3
+------>GET !target
+-------LOD 3
+------<CALL FULLADD
+------>GET !target  
+------<STO 3 
+-----<OP POP    
+----<SET !overflow    ; copy carry flag to result position   
+-<<<RETURN
+        
+; -- subroutine to do a full 8-bit add with carry 
+;    (having incomming and outgoing carry and no
+;     direct ALU support makes this really complex)
+; input stack:  carry, x, y, (ret1,ret2)
+; output stack: carry, sum
+carry = 0
+x = 1
+y = 2
+sum = 1
+FULLADD:    
+; detect if x+y itself would produce an overflow
+----->GET !x
+------>GET !y
+------->DATA 255
+-------<OP XOR
+------<OP GT
+-----<JZ NOOVERFLOW
+----->GET !x   ; overflow detected - sum up x, y and carry
+------>GET !y
+------<OP ADD   
+------>GET !carry
+------<OP ADD
+-----<SET !sum
+----->DATA 1       ; output carry is 1
+-----<SET !carry    
+--<<<RETURN   
+NOOVERFLOW:
+----->GET !x   ; sum up x and y - no overflow can arise
+------>GET !y    
+------<OP ADD    
+-----<SET !sum
+----->GET !carry  ; check if carry is comming in
+-----<JNZ INCOMMINGCARRY  
+--<<<RETURN    ; when no carry comes in, no overflow can happen (and carry was already cleared)	
+INCOMMINGCARRY:    
+----->DATA 1
+------>GET !sum
+------<OP ADD      ; carry did come in, so increase the sum 	
+-----<SET !sum
+----->GET !sum  
+-----<JNZ NOOVERFLOW2
+; when after increasing, the value is 0, there was an overflow (and carry is already set)    
+--<<<RETURN
+NOOVERFLOW2:
+----->DAT 0
+-----<SET !carry   ; output carry must be cleared
+--<<<RETURN
 
 	
-ROL32:      ;  distance address  -> -
-	! distance address
-	>GET distance
-	<JZ ROL32DONE
-	>PUSH 0
-	->GET address
-	--JSR ROLWITHCARRY
-	-->PUSH 1
-	--<ADD
-	--JSR ROLWITHCARRY
-	-->PUSH 1
-	--<ADD
-	--JSR ROLWITHCARRY
-	-->PUSH 1
-	--<ADD
-	--JSR ROLWITHCARRY
-	-<POP
-	->GET address
-	-->LOAD 0
-	--<SQUEEZE
-	-<OR
-	->GET address
-	-->OVER
-	--<STORE 0
-	-<POP
-	<POP
-	>GET distance
-	->PUSH 1
-	-<SUB
-	<SET distance
-	JMP ROL32
-ROL32DONE:	
-	RETURN 0
-	
-ROLWITHCARRY:	  ; carry_in address -> carry_out address
-	! carry address
-	>LOAD 0
-	->DUP
-	-->PUSH 1
-	--<LSL
-	-->GET carry
-	--<OR
-	-->GET address
-	--->OVER
-	---<STORE 0
-	--<POP
-	-<POP
-	->PUSH 7
-	-<LSR
-	<SET carry
-	RETURN 2
+ROL32:      
+; stack-in: distance address (ret1,ret2)
+---->GET !0
+----<JNZ ROL32CONTINUE
+<<<<RETURN
+ROL32CONTINUE:
+---->GET !1
+-----LOD 0
+----->GET 0
+------>GET !1
+-------LOD 1
+------<OP SHL
+------>GET !1
+------<STO 0
+-----<OP POP
+----->GET !1
+------LOD 1
+------>GET !1
+-------LOD 2
+------<OP SHL
+------>GET !1
+------<STO 1
+-----<OP POP
+----->GET !1
+------LOD 2
+------>GET !1
+-------LOD 3
+------<OP SHL
+------>GET !1
+------<STO 2
+-----<OP POP
+----->GET !1
+------LOD 3
+------>GET !4
+------<OP SHL
+------>GET !1
+------<STO 3
+-----<OP POP
+----<OP POP
+---->GET !0
+----->DATA 1
+-----<OP ADD
+----<SET !0
+----JMP ROL32
+
 
 ; ---------- DATA OUTPUT FUNCTIONS ------------
 
+; input stack: (ret1,ret2)
+; output stack: -
 PRINTNEWLINE:
-	>PUSH 10
-	<WRITE 0
-	RET
+-->DATA 10
+--<OUT 15
+<<RETURN
 	
-PRINT32:       ;     ADDRESS -> -
-	->PUSH 4
-	<<JSR PRINTHEXBUFFER
-	RET
-	
-PRINTHEXBUFFER:  ;  ADDRESS LENGTH -> -	
-	! address length
-	>GET length
-	<JZ PRINTHEXBUFFEREND
-PRINTHEXBUFFERLOOP:	
-	>GET address
-	->LOAD 0
-	-<JSR PRINTHEXBYTE
-	->PUSH 1
-	-<ADD
-	<SET address
-	>PUSH 1
-	<SUB
-	>GET length
-	<JNZ PRINTHEXBUFFERLOOP
-PRINTHEXBUFFEREND:	
-	RETURN 0	
+; -- subroutine to send a readable representation
+; -- of a 32-bit number to the output port 0
+; input stack:  address, (ret1,ret2)
+; output stack: -
+address = 0
+PRINT32:
+--->GET !address
+----LOD 3
+---<CALL PRINTBYTE
+--->GET !address
+----LOD 2
+---<CALL PRINTBYTE
+--->GET !address
+----LOD 1
+---<CALL PRINTBYTE
+--->GET !address
+----LOD 0
+---<CALL PRINTBYTE
+<<<RETURN
 
-PRINTHEXBYTE:   ;  VALUE  ->  -
-	->PUSH 4
-	-->LSR
-	--<SQUEEZE
-	-<JSR PRINTHEXDIGIT
-	->PUSH 15
-	-<AND
-	<JSR PRINTHEXDIGIT
-	RET
-	
-PRINTHEXDIGIT:  ;  VALUE  ->  -
-	->LOADX HEXDIGITS
-	-<SQUEEZE
-	<WRITE 0
-	RET
-	
-HEXDIGITS:
-	DATA "0123456789ABCDEF"
-	
+; -- subroutine to send a readable representation
+; -- of a single byte to the output port 0
+; input stack:  byte, (ret1,ret2)
+; output stack: -
+byte = 0
+PRINTBYTE:
+--->GET !byte
+---->DAT 0
+----<OP SHR
+---->DAT 0
+----<OP SHR
+---->DAT 0
+----<OP SHR
+---->DAT 0
+----<OP SHR
+---<CALL PRINTNYBBLE
+--->GET !byte
+---->DAT 15
+----<OP AND
+---<CALL PRINTNYBBLE
+<<<RETURN
+
+; -- subroutine to send a readable representation
+; -- of a single nybble to the output port 15
+; input stack:  nybble, (ret1,ret2)
+; output stack: -
+nybble = 0
+PRINTNYBBLE:
+--->GET !nybble
+---->DATA 48  ; create code '0' - '9'
+----<OP ADD
+---->DATA 58
+----->OPP LT
+-----<SET 0
+----<JNZ ONLY0TO9
+---->DATA 7  ; shift code to 'A' - 'F'
+----<OP ADD
+ONLY0TO9:
+---<OUT 15
+<<<RETURN
+

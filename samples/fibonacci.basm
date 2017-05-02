@@ -1,6 +1,6 @@
 ; Simple implementation of the fibonacci sequence.
 ; Numbers are generated up to 8bit length and sent to
-; output port 0.
+; output port 14.
 
 START:
 ; initial values on stack
@@ -10,7 +10,7 @@ START:
 LOOP:        
 ; send current element to output port 0
 -->GET !1
---<OUT 0
+--<OUT 14
 
 ; add and replace on stack
 -->OPP ADD
@@ -18,10 +18,10 @@ LOOP:
 ---<SET !0
 --<SET !1
     
-; check if the values are still increasing - continue
--->OPP LT
---<JZ END
+; check if the values are starting to drop - exit
+-->OPP GT
+--<JNZ END
 --JUMP LOOP
-    
-END:
---JUMP END
+
+END:    
+--HALT

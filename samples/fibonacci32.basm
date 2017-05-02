@@ -1,7 +1,6 @@
 ; Elaborated implementation of the fibonacci sequence.
-; Numbers are generated up to 32bit length and sent to output port 0.
+; Numbers are generated up to 32bit length and sent to output port 15.
 ; This implementation shows subroutine calls and indexed ram access.
-
 
 ; ----------- RAM LAYOUT ----------------
 A = 0         ; 32 bit, little endian    
@@ -9,38 +8,36 @@ B = 4         ; 32 bit, little endian
 C = 8         ; 32 bit, little endian
 
 ; ------------ startup-code --------------
-START:
     ; init global variables while advancing stack pointer 
-    DATA 0 0 0 0       ; A
-    DATA 1 0 0 0       ; B
-    DATA 0 0 0 0       ; C
+    DATA32 0       ; A
+    DATA32 1       ; B
+    DATA32 0       ; C
     ; from here, the stack pointer works as normally
     CALL MAIN
-END:
-    JUMP END
+	HALT
     
 ; -- main routine --------
 ; input stack: (ret1,ret2)
 ; output stack: -    
 MAIN:    
---  ; print current value of B
+; print current value of B
 -->DATA B
 --<CALL PRINT32
---  ; copy B to C and add A to C in place
+--CALL PRINTNEWLINE
+; copy B to C and add A to C in place
 -->>DATA B C
 --<<CALL COPY32
 -->>DATA A C
 ---<CALL ADD32
----  ; terminate if overflow
---<JZ NOOVERFLOW
+; terminate if overflow
+--<JZ NOTTOOBIG
 <<RET 0
-NOOVERFLOW:    
--- ; copy B to A and C to B to prepare for next iteration
+NOTTOOBIG:    
+; copy B to A and C to B to prepare for next iteration
 -->>DATA B A
 --<<CALL COPY32
 -->>DATA C B
---<<CALL COPY32
---    
+--<<CALL COPY32 
 --JUMP MAIN
     
 ; -- subroutine to copy a 32-bit value
@@ -49,27 +46,27 @@ NOOVERFLOW:
 source = 0
 target = 1    
 COPY32:  
----->GET source    
+---->GET !source    
 -----LOD 0
------>GET target
+----->GET !target
 -----<STO 0  
 ----<OP POP
----->GET source    
+---->GET !source    
 -----LOD 1
------>GET target
+----->GET !target
 -----<STO 1
 ----<OP POP
----->GET source    
+---->GET !source    
 -----LOD 2
------>GET target
+----->GET !target
 -----<STO 2
 ----<OP POP
----->GET source    
+---->GET !source    
 -----LOD 3
------>GET target
+----->GET !target
 -----<STO 3
 ----<OP POP
-<<<<RET 2
+<<<<RETURN
 
 ; -- subroutine to add a 32-bit value to another
 ;  input stack:  source-address, target-address, (ret1,ret2)
@@ -79,40 +76,40 @@ target = 1
 overflow = 0
 ADD32:    
 ---->DAT 0  ; carry flag
------>GET source   
+----->GET !source   
 ------LOD 0  
------->GET target  
+------>GET !target  
 -------LOD 0  
 ------<CALL FULLADD
------->GET target  
+------>GET !target  
 ------<STO 0 
------<POP
------>GET source
+-----<OP POP
+----->GET !source
 ------LOD 1  
------->GET target
+------>GET !target
 -------LOD 1  
 ------<CALL FULLADD
------->GET target   
+------>GET !target   
 ------<STO 1 
------<POP
------>GET source
+-----<OP POP
+----->GET !source
 ------LOD 2  
------->GET target
+------>GET !target
 -------LOD 2  
 ------<CALL FULLADD
------->GET target   
+------>GET !target   
 ------<STO 2 
------<POP
------>GET source
+-----<OP POP
+----->GET !source
 ------LOD 3
------->GET target
+------>GET !target
 -------LOD 3
 ------<CALL FULLADD
------->GET target  
+------>GET !target  
 ------<STO 3 
 -----<OP POP    
-----<SET overflow    ; copy carry flag to result position
--<<<RET 1
+----<SET !overflow    ; copy carry flag to result position   
+-<<<RETURN
         
 ; -- subroutine to do a full 8-bit add with carry 
 ;    (having incomming and outgoing carry and no
@@ -125,42 +122,49 @@ y = 2
 sum = 1
 FULLADD:    
 ; detect if x+y itself would produce an overflow
------>GET x
------->GET y
+----->GET !x
+------>GET !y
 ------->DATA 255
 -------<OP XOR
 ------<OP GT
 -----<JZ NOOVERFLOW
------>GET x   ; overflow detected - sum up x, y and carry
------->GET y
+----->GET !x   ; overflow detected - sum up x, y and carry
+------>GET !y
 ------<OP ADD   
------->GET carry
+------>GET !carry
 ------<OP ADD
------<SET sum
+-----<SET !sum
 ----->DATA 1       ; output carry is 1
------<SET carry    
---<<<RET 1   
+-----<SET !carry    
+--<<<RETURN   
 NOOVERFLOW:
------>GET x   ; sum up x and y - no overflow can arise
------->GET y    
+----->GET !x   ; sum up x and y - no overflow can arise
+------>GET !y    
 ------<OP ADD    
------<SET sum
------>GET carry  ; check if carry is comming in
+-----<SET !sum
+----->GET !carry  ; check if carry is comming in
 -----<JNZ INCOMMINGCARRY  
---<<<RET 1    ; when no carry comes in, no overflow can happen (and carry was already cleared)	
+--<<<RETURN    ; when no carry comes in, no overflow can happen (and carry was already cleared)	
 INCOMMINGCARRY:    
 ----->DATA 1
------->GET sum
+------>GET !sum
 ------<OP ADD      ; carry did come in, so increase the sum 	
------<SET sum
------>GET sum  
+-----<SET !sum
+----->GET !sum  
 -----<JNZ NOOVERFLOW2
 ; when after increasing, the value is 0, there was an overflow (and carry is already set)    
---<<<RET 1
+--<<<RETURN
 NOOVERFLOW2:
 ----->DAT 0
------<SET carry   ; output carry must be cleared
---<<<RET 1
+-----<SET !carry   ; output carry must be cleared
+--<<<RETURN
+
+; input stack: (ret1,ret2)
+; output stack: -
+PRINTNEWLINE:
+-->DATA 10
+--<OUT 15
+<<RETURN
 
 ; -- subroutine to send a readable representation
 ; -- of a 32-bit number to the output port 0
@@ -168,19 +172,19 @@ NOOVERFLOW2:
 ; output stack: -
 address = 0
 PRINT32:
---->GET address
-----LOD 0
----<CALL PRINTBYTE
---->GET address
-----LOD 1
----<CALL PRINTBYTE
---->GET address
-----LOD 2
----<CALL PRINTBYTE
---->GET address
+--->GET !address
 ----LOD 3
 ---<CALL PRINTBYTE
-<<<RET 1
+--->GET !address
+----LOD 2
+---<CALL PRINTBYTE
+--->GET !address
+----LOD 1
+---<CALL PRINTBYTE
+--->GET !address
+----LOD 0
+---<CALL PRINTBYTE
+<<<RETURN
 
 ; -- subroutine to send a readable representation
 ; -- of a single byte to the output port 0
@@ -188,7 +192,7 @@ PRINT32:
 ; output stack: -
 byte = 0
 PRINTBYTE:
---->GET byte
+--->GET !byte
 ---->DAT 0
 ----<OP SHR
 ---->DAT 0
@@ -198,28 +202,28 @@ PRINTBYTE:
 ---->DAT 0
 ----<OP SHR
 ---<CALL PRINTNYBBLE
---->GET byte
+--->GET !byte
 ---->DAT 15
 ----<OP AND
 ---<CALL PRINTNYBBLE
-<<<RET 1
+<<<RETURN
 
 ; -- subroutine to send a readable representation
-; -- of a single nybble to the output port 0
+; -- of a single nybble to the output port 15
 ; input stack:  nybble, (ret1,ret2)
 ; output stack: -
 nybble = 0
 PRINTNYBBLE:
---->GET nybble
+--->GET !nybble
 ---->DATA 48  ; create code '0' - '9'
 ----<OP ADD
 ---->DATA 58
 ----->OPP LT
------<OP FIRST
+-----<SET 0
 ----<JNZ ONLY0TO9
 ---->DATA 7  ; shift code to 'A' - 'F'
 ----<OP ADD
 ONLY0TO9:
----<OUT 0
-<<<RET 1
+---<OUT 15
+<<<RETURN
 

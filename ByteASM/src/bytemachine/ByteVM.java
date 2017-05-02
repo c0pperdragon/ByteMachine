@@ -6,7 +6,8 @@ public class ByteVM
 {
 	public static void main(String args[]) throws IOException
 	{
-		(new ByteVM()).loadAndExecute("C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/fibonacci.basm");	
+//		(new ByteVM()).loadAndExecute("C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/fibonacci.basm", false);
+		(new ByteVM()).loadAndExecute("C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/fibonacci32.basm", false);	
 	}
 
 	byte rom[];
@@ -18,18 +19,18 @@ public class ByteVM
 	{	
 	}
 	
-	public void loadAndExecute(String filename) throws IOException
+	public void loadAndExecute(String filename, boolean trace) throws IOException
 	{
 		rom = ByteASM.assemble(filename, System.out);
-		ByteASM.generateSimpleDump(rom, System.out);
 		if (rom==null) return;	
+		ByteASM.generateSimpleDump(rom, System.out);
 		
 		M = new byte[256];
 		PC = 0;
 		SP = 255;
-		for (int i=0; i<40; i++) 
+		for (;;) // int i=0; i<(trace?100:1000000); i++) 
 		{	 
-			printstate();
+			if (trace) printstate();
 			if (!step()) break;
 		}
 	}
@@ -41,7 +42,7 @@ public class ByteVM
 		int SPm1 = (SP-1) & 0xff;
 		int SPp1 = (SP+1) & 0xff;
 		int PCp1 = (PC+1) & 0xffff;
-				
+		
 		switch (command & 0xf0)
 		{	case 0x00:              // high bits
 				M[SP] |= (x<<4);
@@ -82,23 +83,56 @@ public class ByteVM
 				PC = PCp1;
                	break;
 			case 0x80:              // IN x
-				break;
-			case 0x90:              // OUT x
-				System.out.println("> "+ (M[SP]&0xff));
-				SP = SPm1;
+				M[SP] = 0;
+				SP = SPp1;
 				PC = PCp1;
 				break;
+			case 0x90:              // OUT x
+				{	int b = M[SP]&0xff;
+					if (x==15) {	// text output
+						System.out.print((char)b);
+					} else if (x==14) { // binary output
+						System.out.print(b+" ");
+					}
+					SP = SPm1;
+					PC = PCp1;
+				}
+				break;
 			case 0xA0:              // JMP
+				{	int dist = ((M[SP]&0xff) << 4) | x;
+					if (dist>0x7ff) dist = dist - 0x1000;
+					SP = SPm1;
+					PC = (PC + dist) & 0xffff;
+				}				
 				break;
 			case 0xB0:              // JZ
+				if (M[SP]==0) PC = (PC + 2 + x) & 0xffff;
+				else          PC = PCp1;
+				SP = SPm1;
 				break;
 			case 0xC0:              // JNZ
+				if (M[SP]!=0) PC = (PC + 2 + x) & 0xffff;
+				else          PC = PCp1;
+				SP = SPm1;
 				break;
 			case 0xD0:              // JSR
+				{	int target = ( (M[SPm1]&0xff) | (x<<4) ) + M[SP]*256;
+					M[SPm1] = (byte) (PCp1%256);
+					M[SP] = (byte) (PCp1/256);
+					PC = target;
+				}
 				break;
 			case 0xE0:			    // RET		
+				{	int adr = (M[SP-1]&0xff) + (M[SP]&0xff)*256;
+					if (adr==PC && x==0) return false;  // detect HALT condition
+					PC = adr;
+	            	SP = (SP-x) & 0xff;
+	            	M[SP] = (byte) (PC/256);
+				}
 				break;
 			case 0xF0:			    // ADR		
+				M[SPp1] = (byte) ((SP-x)&0xff);
+				SP = SPp1;
 				break;
 			default:
 				return false;
@@ -123,16 +157,16 @@ public class ByteVM
 	private static byte alu(int operation, byte x, byte y)
 	{
         switch (operation)
-        {	case 0x0:	return x;              	  				// POP
-        	case 0x1:   return (byte)(x+y);         			// ADD
-        	case 0x2:   return (byte)(x-y);						// SUB
-        	case 0x3:   return (byte)(x & y);				    // AND
-        	case 0x4:   return (byte)(x|y);						// OR
-        	case 0x5:   return (byte)(x^y);						// XOR
-        	case 0x6:   return (byte)((x&0xff)<(y&0xff)?1:0);	// LT
-        	case 0x7:   return (byte)((x&0xff)>(y&0xff)?1:0);	// GT
-        	case 0x8:   return (byte)((x<<1)|(y>>7));   		// SHL	
-        	case 0x9:   return (byte)((x>>1)|(y<<7));			// SHR
+        {	case 0x0:	return x;              	  				    // POP
+        	case 0x1:   return (byte)(x+y);         			    // ADD
+        	case 0x2:   return (byte)(x-y);						    // SUB
+        	case 0x3:   return (byte)(x & y);				        // AND
+        	case 0x4:   return (byte)(x|y);						    // OR
+        	case 0x5:   return (byte)(x^y);						    // XOR
+        	case 0x6:   return (byte)((x&0xff)<(y&0xff)?1:0);	    // LT
+        	case 0x7:   return (byte)((x&0xff)>(y&0xff)?1:0);	    // GT
+        	case 0x8:   return (byte)(((x&0xff)<<1)|((y&0xff)>>7)); // SHL	
+        	case 0x9:   return (byte)(((x&0xff)>>1)|((y&0xff)<<7)); // SHR
 			default:	return 0;	
         }
 	}

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.StringTokenizer;
 
 public class ByteASM 
 {
@@ -112,17 +113,19 @@ public class ByteASM
 		throws Exception
 	{
 		int pc = code.size();
-		int stackbase = -1;
 		
 		if (operation==null || operation.length()<1)
 		{	throw new Exception("Instruction expected");
 		}
 		
 		// trim stack depth hints
+		int stackbase = -1;
+		int pops = 0;
 		while (operation.length()>0) {
 			char c = operation.charAt(0);
 			if (!(c=='<' || c=='>' || c=='-')) break;
 			if (c=='-') stackbase++;
+			if (c=='<') pops++;
 			operation = operation.substring(1);
 		}
 		
@@ -132,16 +135,6 @@ public class ByteASM
 		}
 		else if (operation.equals("DAT"))
 		{	code.write( 0x10 | resolveInt(parameter, constants, 0,15, stackbase));
-		}
-		else if (operation.equals("DATA"))
-		{	int v = resolveInt(parameter, constants, 0,255, stackbase);
-			if (v<=15) 
-			{	code.write( 0x10 | v);
-			}
-			else
-			{	code.write( 0x10 | (v & 0xf));
-				code.write( 0x00 | (v >> 4) );
-			}
 		}
 		else if (operation.equals("OP")) 
 		{	code.write( 0x20 | resolveOperator(parameter));
@@ -169,28 +162,11 @@ public class ByteASM
 		else if (operation.equals("OUT")) 
 		{	code.write( 0x90 | resolveInt(parameter, constants, 0,15, stackbase));
 		}
-		else if (operation.equals("JUMP")) 
-		{	int a = resolveLabel(parameter, labels, subsequentpass);
-			int rel = (a<0) ? 0 : a-(pc+2);
-			if (rel<-2045 || rel>2045) throw new Exception("Jump target out of range");
-			int x = (rel>=0) ? (rel*2) : ((-rel)*2 + 1);
-			code.write( 0x10 | ((x>>4)&0xf) );
-			code.write( 0x00 | ((x>>8)&0xf) );
-			code.write( 0xC0 | ((x>>0)&0xf) );
-		}
 		else if (operation.equals("JZ") || operation.equals("JNZ")) 
 		{	int a = resolveLabel(parameter, labels, subsequentpass);
 			int rel = (a<0) ? 2 : a-pc;
 			if (rel<2 || rel>2+15) throw new Exception("Jump target out of range");
-			code.write( (operation.equals("JZ")?0xA0:0xB0) | (rel-2));
-		}
-		else if (operation.equals("CALL")) 
-		{	int a = resolveLabel(parameter, labels, subsequentpass);
-			if (a<0) a=0;
-			code.write( 0x10 | ((a>>8)&0xf) );
-			code.write( 0x00 | ((a>>12)&0xf) );
-			code.write( 0x10 | ((a>>0)&0xf) );
-			code.write( 0xD0 | ((a>>4)&0xf) );
+			code.write( (operation.equals("JZ")?0xB0:0xC0) | (rel-2));
 		}
 		else if (operation.equals("RET")) {	
 			code.write( 0xE0 | resolveInt(parameter, constants, 0,15, stackbase));	
@@ -198,6 +174,64 @@ public class ByteASM
 		else if (operation.equals("ADR")) 		
 		{	code.write( 0xF0 | resolveInt(parameter, constants, 0,15, stackbase));
 		}		
+
+		else if (operation.equals("JUMP")) 
+		{	int a = resolveLabel(parameter, labels, subsequentpass);
+			int rel = (a<0) ? 10 : a-(pc+2);
+			if (rel<-2045 || rel>2045) throw new Exception("Jump target out of range");
+			code.write( 0x10 | ((rel>>4)&0xf) );
+			code.write( 0x00 | ((rel>>8)&0xf) );
+			code.write( 0xA0 | ((rel>>0)&0xf) );
+		}
+		else if (operation.equals("CALL")) 
+		{	int a = resolveLabel(parameter, labels, subsequentpass);
+			if (a<0) a=0;
+			code.write( 0x10 | ((a>>0)&0xf) );
+			code.write( 0x10 | ((a>>8)&0xf) );
+			code.write( 0x00 | ((a>>12)&0xf) );
+			code.write( 0xD0 | ((a>>4)&0xf) );
+			code.write( 0x20 );
+		}
+		else if (operation.equals("RETURN")) 
+		{	if (pops<1) throw new Exception("Too little pops on RETURN"); 
+			if (pops>16) throw new Exception("Too many pops on RETURN");
+			code.write( 0xE0 | (pops-1) );
+		}
+		else if (operation.equals("HALT")) 
+		{	int a = pc+4;
+			code.write( 0x10 | ((a>>0)&0xf) );
+			code.write( 0x00 | ((a>>4)&0xf) );
+			code.write( 0x10 | ((a>>8)&0xf) );
+			code.write( 0x00 | ((a>>12)&0xf) );
+			code.write( 0xE0 );
+		}
+		else if (operation.equals("DATA"))
+		{	StringTokenizer tok = new StringTokenizer(parameter.trim());
+			while (tok.hasMoreTokens()) {		
+				int v = resolveInt(tok.nextToken(), constants, 0,255, stackbase);
+				if (v<=15) 
+				{	code.write( 0x10 | v);
+				}
+				else
+				{	code.write( 0x10 | (v & 0xf));
+					code.write( 0x00 | (v >> 4) );
+				}
+			}
+		}
+		else if (operation.equals("DATA32"))
+		{	StringTokenizer tok = new StringTokenizer(parameter.trim());
+			while (tok.hasMoreTokens()) {		
+				int v = resolveInt(tok.nextToken(), constants, Integer.MIN_VALUE, Integer.MAX_VALUE, stackbase);
+				code.write( 0x10 | ((v >>  0) & 0x0f) );
+				code.write( 0x00 | ((v >>  4) & 0x0f) );				
+				code.write( 0x10 | ((v >>  8) & 0x0f) );
+				code.write( 0x00 | ((v >> 12) & 0x0f) );				
+				code.write( 0x10 | ((v >> 16) & 0x0f) );
+				code.write( 0x00 | ((v >> 20) & 0x0f) );				
+				code.write( 0x10 | ((v >> 24) & 0x0f) );
+				code.write( 0x00 | ((v >> 28) & 0x0f) );				
+			}
+		}
 		else 
 		{	throw new Exception("Unknown command: "+operation);
 		}		
