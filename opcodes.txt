@@ -126,11 +126,11 @@ the lower 4 bits specify a parameter:
         means that the caller of a subroutine needs to immediately discard this 
         unused byte (This will automatically be taken care of by the CALL assembler
         instruction).
-        This instruction can also be used to perfrom a total CPU halt: RET 0 will leave the
+        This instruction can also be used to perform a total CPU halt: RET 0 will leave the
         operand stack unaltered, and if the address is this instruction itself, the 
         CPU will endlessly jump to the same instruction without altering any of the
         internal registers, in fact causing a total stop of all activity (besides the
-        incomming clock).
+        incoming clock).
 
 
     Fx ADR x
@@ -163,4 +163,4 @@ instruction address 0.
 The stackpointer (SP) will first be set to 255, so a subsequent DAT instruction 
 (which is basically the only instruction that should be done on an empty stack) 
 will fill ram address 0.
-All output port registers will be set to 255 (outputs would are active low by default). 
+All output port registers will be set to 255 (outputs are active low by default). 

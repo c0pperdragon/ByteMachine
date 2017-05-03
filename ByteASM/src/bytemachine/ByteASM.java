@@ -74,7 +74,8 @@ public class ByteASM
 				}					
 				// handle code line
 				else if (o!=null && o.length()>0)
-				{	try 
+				{	// System.out.println("line: "+o+" "+p);
+					try 
 					{	assembleLine(labels,constants,code, o, p, phase>0);
 					}
 					catch (Exception e) 
@@ -94,7 +95,7 @@ public class ByteASM
 			parser.close();	
 			
 			if (counterrors>0)
-			{	System.err.println("Errors during compilation: "+counterrors);
+			{	logfile.println("Errors during compilation: "+counterrors);
 				return null;
 			}
 			
@@ -292,7 +293,7 @@ public class ByteASM
 		Integer i = labels.get(l);
 		if (i==null)
 		{	if (!required) return -1;			
-			throw new Exception("Unresolved label: l");
+			throw new Exception("Unresolved label: "+l);
 		} 
 		else 
 		{	return i.intValue();

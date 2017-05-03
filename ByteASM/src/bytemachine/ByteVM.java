@@ -6,8 +6,9 @@ public class ByteVM
 {
 	public static void main(String args[]) throws IOException
 	{
-//		(new ByteVM()).loadAndExecute("C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/fibonacci.basm", false);
-		(new ByteVM()).loadAndExecute("C:/Users/Reinhard/Documents/GitHub/ByteMachine/samples/fibonacci32.basm", false);	
+//		(new ByteVM()).loadAndExecute("../samples/fibonacci.basm", false);
+//		(new ByteVM()).loadAndExecute("../samples/fibonacci32.basm", false);	
+		(new ByteVM()).loadAndExecute("../samples/md5calc.basm", false);	
 	}
 
 	byte rom[];
@@ -28,7 +29,7 @@ public class ByteVM
 		M = new byte[256];
 		PC = 0;
 		SP = 255;
-		for (;;) // int i=0; i<(trace?100:1000000); i++) 
+		for (int i=0; i<1000; i+=(trace?1:0)) 
 		{	 
 			if (trace) printstate();
 			if (!step()) break;
@@ -123,7 +124,7 @@ public class ByteVM
 				}
 				break;
 			case 0xE0:			    // RET		
-				{	int adr = (M[SP-1]&0xff) + (M[SP]&0xff)*256;
+				{	int adr = (M[SPm1]&0xff) + (M[SP]&0xff)*256;
 					if (adr==PC && x==0) return false;  // detect HALT condition
 					PC = adr;
 	            	SP = (SP-x) & 0xff;
@@ -133,6 +134,7 @@ public class ByteVM
 			case 0xF0:			    // ADR		
 				M[SPp1] = (byte) ((SP-x)&0xff);
 				SP = SPp1;
+				PC = PCp1;				
 				break;
 			default:
 				return false;
@@ -145,6 +147,8 @@ public class ByteVM
 	{
 		System.out.print(String.format("%04X ", Integer.valueOf(PC)));
 		System.out.print(String.format("%02X  ", Integer.valueOf(rom[PC] & 0xff)));
+
+		System.out.print(String.format("%02X  ", Integer.valueOf(SP & 0xff)));
 		
 		for (int i=0; SP!=255 && i<=SP; i++)
 		{	System.out.print(String.format(" %02X", Integer.valueOf(M[i] & 0xff)));

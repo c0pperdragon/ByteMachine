@@ -18,8 +18,6 @@ public class MD5WithBytes
 		}
 		MD5FINISH();
 		MD5PRINT();
-		
-		System.out.println();		
 	}
 
 	// simulate a small ram with enough space for the operation
@@ -88,7 +86,11 @@ public class MD5WithBytes
 	
 	public static void MD5PRINT()
 	{
-		PRINTHEXBUFFER(A0,16);
+		PRINT32(A0);
+		PRINT32(B0);
+		PRINT32(C0);
+		PRINT32(D0);		
+		System.out.println();
 	}
 		
 	private static void MD5APPEND(byte b, boolean increasecounter)
@@ -106,17 +108,15 @@ public class MD5WithBytes
 	}
 		
 	private static void MD5COMPUTEBLOCK()
-	{
+	{	
 		COPY32(A0,A);
 		COPY32(B0,B);
 		COPY32(C0,C);
 		COPY32(D0,D);
 		
 		for (int i=0; i<=15; i++)
-		{	COPY32(C,F);
-
-PRINTHEXBUFFER(A,16);PRINTNEWLINE();
-
+		{	
+			COPY32(C,F);
 			XOR32(D,F);
 			AND32(B,F);
 			XOR32(D,F);
@@ -149,18 +149,32 @@ PRINTHEXBUFFER(A,16);PRINTNEWLINE();
 		ADD32(C,C0);
 		ADD32(D,D0);
 	}
-	
+
+	public static void pdebug() {
+		PRINT32(A);PRINT32(B);PRINT32(C);PRINT32(D);PRINT32(F);PRINT32(K);PRINTNEWLINE();			
+	}
 	private static void MD5ROUND(int i, int g)
 	{
+//pdebug();		
 		CONST32(k[i],K);
+//pdebug();		
 		ADD32(A,F);
+//pdebug();		
 		ADD32(K,F);
+//pdebug();		
 		ADD32(M+4*g, F);
+//pdebug();		
 		ROL32(s[i], F);
+//pdebug();		
 		COPY32(D,A);
+//pdebug();		
 		COPY32(C,D);
+//pdebug();		
 		COPY32(B,C);
+//pdebug();		
 		ADD32(F,B);
+//pdebug();	
+//PRINTNEWLINE();
 	}
 	
 		
@@ -199,9 +213,9 @@ PRINTHEXBUFFER(A,16);PRINTNEWLINE();
 		i2b ( (v<<distance) | (v>>>(32-distance)), addr); 
 	}	
 	
-	private static void PRINTHEXBUFFER(int address, int length)
+	private static void PRINT32(int address)
 	{
-		for (int i=0; i<length; i++)
+		for (int i=0; i<4; i++)
 		{	PRINTHEX(ram[address+i]);
 		}
 	}

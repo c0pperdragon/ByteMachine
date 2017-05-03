@@ -99,7 +99,7 @@ public class ByteParser
 		if (idx>=0)
 		{
 			currentOperation = l.substring(0,idx).trim();
-			currentParameter = l.substring(idx).trim();
+			currentParameter = expandStringToBytes(l.substring(idx).trim());
 		}
 		else
 		{
@@ -108,6 +108,21 @@ public class ByteParser
 
 		return true;
 	}
-	
+
+	private static String expandStringToBytes(String s) {
+		int idx1 = s.indexOf('"');
+		if (idx1<0) return s;
+		int idx2 = s.indexOf('"', idx1+1);
+		if (idx2<0) return s;
+		
+		StringBuffer b = new StringBuffer(s.substring(0, idx1));
+		b.append(" ");
+		for (int i=idx1+1; i<idx2; i++) {
+			b.append( ((int) s.charAt(i)) & 0xff);
+			b.append(" ");
+		}
+		b.append(s.substring(idx2+1));
+		return expandStringToBytes(b.toString());
+	}
 
 }
