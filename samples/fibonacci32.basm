@@ -218,7 +218,9 @@ PRINTNYBBLE:
 ---->DATA 48  ; create code '0' - '9'
 ----<OP ADD
 ---->DATA 58
------>OPP LT
+----->GET 1
+------>GET 1
+------<OP LT
 -----<SET 0
 ----<JNZ ONLY0TO9
 ---->DATA 7  ; shift code to 'A' - 'F'

@@ -140,9 +140,9 @@ public class ByteASM
 		else if (operation.equals("OP")) 
 		{	code.write( 0x20 | resolveOperator(parameter));
 		}
-		else if (operation.equals("OPP")) 
-		{	code.write( 0x30 | resolveOperator(parameter));
-		}
+		else if (operation.equals("ADR")) 		
+		{	code.write( 0x30 | resolveInt(parameter, constants, 0,15, stackbase));
+		}		
 		else if (operation.equals("GET")) 
 		{	int p = resolveInt(parameter, constants, 0,15, stackbase);
 			code.write( 0x40 | p);
@@ -172,9 +172,6 @@ public class ByteASM
 		else if (operation.equals("RET")) {	
 			code.write( 0xE0 | resolveInt(parameter, constants, 0,15, stackbase));	
 		}
-		else if (operation.equals("ADR")) 		
-		{	code.write( 0xF0 | resolveInt(parameter, constants, 0,15, stackbase));
-		}		
 
 		else if (operation.equals("JUMP")) 
 		{	int a = resolveLabel(parameter, labels, subsequentpass);
@@ -319,8 +316,9 @@ public class ByteASM
 		for (int address=0; address<data.length; address+=16) {
 			int n = Math.min(data.length-address, 16);
 			for (int i=0; i<n; i++) {
+				outfile.print("16#");
 				outfile.print(toHex(data[address+i]&0xff,2));
-				outfile.print(" ");
+				outfile.print("#,");
 			}
 			outfile.println();
 		}

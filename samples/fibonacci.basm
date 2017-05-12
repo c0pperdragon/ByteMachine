@@ -8,18 +8,22 @@ START:
 ->DATA 1
         
 LOOP:        
-; send current element to output port 0
+; send current element to output port
 -->GET !1
 --<OUT 14
 
 ; add and replace on stack
--->OPP ADD
+-->GET !0
+--->GET !1
+---<OP ADD
 --->GET !1
 ---<SET !0
 --<SET !1
     
 ; check if the values are starting to drop - exit
--->OPP GT
+-->GET !0
+--->GET !1
+---<OP GT
 --<JNZ END
 --JUMP LOOP
 

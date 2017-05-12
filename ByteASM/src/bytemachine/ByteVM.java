@@ -59,10 +59,10 @@ public class ByteVM
 			    SP = SPm1;
 				PC = PCp1;
 				break;
-			case 0x30:				// operation with pushing the stack
-				M[SPp1] = alu(x, M[SPm1], M[SP]);
+			case 0x30:			    // ADR		
+				M[SPp1] = (byte) ((SP-x)&0xff);
 				SP = SPp1;
-				PC = PCp1;
+				PC = PCp1;				
 				break;
 			case 0x40:              // GET p	
 				M[SPp1] = M[(SP-x)&0xff];
@@ -130,11 +130,6 @@ public class ByteVM
 	            	SP = (SP-x) & 0xff;
 	            	M[SP] = (byte) (PC/256);
 				}
-				break;
-			case 0xF0:			    // ADR		
-				M[SPp1] = (byte) ((SP-x)&0xff);
-				SP = SPp1;
-				PC = PCp1;				
 				break;
 			default:
 				return false;
