@@ -1,0 +1,9 @@
+; small test program to use various aspects of the bytemachine
+; it is so small that i do not even use any assembler
+
+FF00 E8             INX           ; count
+FF01 8A             TXA
+FF02 9D 00 FF       STA $FF00,X   ; write counter to both output ports
+FF05 4C 00 FF       JMP $FF00
+               
+FFFC 00 FF         ; reset vector
