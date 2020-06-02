@@ -1,9 +1,42 @@
-; small test program to use various aspects of the bytemachine
-; it is so small that i do not even use any assembler
+; Small test program to use various aspects of the bytemachine with a 65C02 CPU.
+; It is small enough so that I do not even use an assembler.
+; The program tries to use different parts of the ROM and different parts of the RAM for read and write.
+; It also accesses the input and the output port to check if all bits are working.
+; The output LEDs will play an animation which should look familiar to anyone who knows the 
+; 80ths TV show "Knight Rider".
 
-FF00 E8             INX           ; count
-FF01 8A             TXA
-FF02 9D 00 FF       STA $FF00,X   ; write counter to both output ports
-FF05 4C 00 FF       JMP $FF00
-               
-FFFC 00 FF         ; reset vector
+8000 80 C0 60 30 18 0C 06 03 01 03 06 0C 18 30 60 C0  ; pattern sequence
+
+FF00 A9 00          LDA #$00       ; enable RAM read
+FF02 8D CC CC       STA $CCCC 
+
+FF05 A5 00          LDA $00        ; read counter from low RAM
+FF07 18             CLC 
+FF08 69 01          ADC #1
+FF0A 29 0F          AND #$0F
+FF0C 85 00          STA $00        ; write incremented counter to low RAM
+
+FF0E AA             TAX
+FF0F BD 00 80       LDA $8000,X    ; fetch output pattern from low ROM
+FF12 8D FF 7F       STA $7FFF      ; write to high RAM
+FF15 AD FF 7F       LDA $7FFF      ; read back from high RAM
+
+FF18 A2 80          LDX #$80       ; disable RAM, enable port read
+FF1A 8E AA AA       STX $AAAA
+FF1D 0D 55 55       ORA $5555      ; read port and modify output pattern
+FF20 8D BB BB       STA $BBBB      ; write pattern to output port (may enable RAM)
+
+FF23 A9 05          LDA #5         ; waiting loop
+FF25 A0 00      w0: LDY #0
+FF27 A2 00      w1: LDX #0
+FF29 E8         w2: INX
+FF2A D0 FD          BNE w2
+FF2C C8             INY
+FF2D D0 F8          BNE w1
+FF2F 38             SEC 
+FF30 E9 01          SBC #1
+FF32 D0 F1          BNE w0
+
+FF34 4C 00 FF       JMP $FF00
+                
+FFFC 00 FF                          ; reset vector
