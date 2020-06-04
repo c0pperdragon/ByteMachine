@@ -1,4 +1,4 @@
-# The Byte Machine - Specification
+# The Byte CPU - Specification
 
 The CPU fetches instructions from a dedicated read-only instruction memory with an address
 width of 16 bit and data width of 8 bit (65536 instructions maximum) and operate 

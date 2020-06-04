@@ -1,4 +1,4 @@
-; Small test program to use various aspects of the bytemachine with a 65C02 CPU.
+; Small test program to use various aspects of the ByteMachine with a 65C02 CPU.
 ; It is small enough so that I do not even use an assembler.
 ; The program tries to use different parts of the ROM and different parts of the RAM for read and write.
 ; It also accesses the input and the output port to check if all bits are working.
