@@ -7,36 +7,36 @@
 
 8000 80 C0 60 30 18 0C 06 03 01 03 06 0C 18 30 60 C0  ; pattern sequence
 
-FF00 A9 00          LDA #$00       ; enable RAM read
-FF02 8D CC CC       STA $CCCC 
+FF00 A9 00          LDA #$00       ; initialize counter
+FF02 85 00          STA $00 
 
-FF05 A5 00          LDA $00        ; read counter from low RAM
-FF07 18             CLC 
-FF08 69 01          ADC #1
-FF0A 29 0F          AND #$0F
-FF0C 85 00          STA $00        ; write incremented counter to low RAM
+FF04 A5 00          LDA $00        ; read counter from low RAM
+FF06 18             CLC            ; increment up to 15 
+FF07 69 01          ADC #1
+FF09 29 0F          AND #$0F
+FF0B 85 00          STA $00        ; write incremented counter to low RAM
 
-FF0E AA             TAX
-FF0F BD 00 80       LDA $8000,X    ; fetch output pattern from low ROM
-FF12 8D FF 7F       STA $7FFF      ; write to high RAM
-FF15 AD FF 7F       LDA $7FFF      ; read back from high RAM
+FF0D AA             TAX
+FF0E BD 00 80       LDA $8000,X    ; fetch output pattern from low ROM
+FF11 8D FF 7F       STA $7FFF      ; write to high RAM
+FF14 AD FF 7F       LDA $7FFF      ; read back from high RAM
 
-FF18 A2 80          LDX #$80       ; disable RAM, enable port read
-FF1A 8E AA AA       STX $AAAA
-FF1D 0D 55 55       ORA $5555      ; read port and modify output pattern
-FF20 8D BB BB       STA $BBBB      ; write pattern to output port (may enable RAM)
+FF17 8D BB BB       STA $BBBB      ; write pattern to output port (switches to IO mode)
+FF1A 0D 55 55       ORA $5555      ; read IO port and modify output pattern
+FF1D 8D BB BB       STA $BBBB      ; write modified pattern to output port
+FF20 85 01          STA $01        ; dummy write to RAM to disable IO mode
 
-FF23 A9 05          LDA #5         ; waiting loop
-FF25 A0 00      w0: LDY #0
-FF27 A2 00      w1: LDX #0
-FF29 E8         w2: INX
-FF2A D0 FD          BNE w2
-FF2C C8             INY
-FF2D D0 F8          BNE w1
-FF2F 38             SEC 
-FF30 E9 01          SBC #1
-FF32 D0 F1          BNE w0
+FF22 A9 05          LDA #5         ; waiting loop
+FF24 A0 00      w0: LDY #0
+FF26 A2 00      w1: LDX #0
+FF28 E8         w2: INX
+FF29 D0 FD          BNE w2
+FF2B C8             INY
+FF2C D0 F8          BNE w1
+FF2E 38             SEC 
+FF2F E9 01          SBC #1
+FF31 D0 F1          BNE w0
 
-FF34 4C 00 FF       JMP $FF00
+FF33 4C 04 FF       JMP $FF04
                 
 FFFC 00 FF                          ; reset vector
