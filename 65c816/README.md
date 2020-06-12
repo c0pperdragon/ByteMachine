@@ -13,13 +13,13 @@ are only shown by their designators to avoid too much clutter in the diagram.
 
 ## Memory map
 
-The 64K address space which the 6502 can access using its 16 address lines are translated to the address spaces of the ByteMachine
+The 64K address space which the 6502 can access using its 16 address lines are translated to the address space of the ByteMachine
 in the following way:
 
-| CPU        | main board       |
-| ---------- | ---------------- |
-| 0000..7FFF | RAM              | 
-| 8000..FFFF | ROM 08000..0FFFF | 
+| CPU        | main board   |     |
+| ---------- | ------------ | --- |
+| 0000..7FFF | 88000..8FFFF | RAM | 
+| 8000..FFFF | 08000..0FFFF | ROM |
 
 ## More possibilities
 

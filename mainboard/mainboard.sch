@@ -102,7 +102,7 @@ A17
 Text Label 1200 2350 0    50   ~ 0
 A18
 Text Label 1200 2250 0    50   ~ 0
-A19
+RAM
 $Comp
 L power:GND #PWR04
 U 1 1 5ECA7CBD
@@ -360,7 +360,7 @@ F 3 "http://www.ti.com/lit/gpn/sn7400" H 6700 3750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text Label 2100 1900 0    50   ~ 0
-A19
+RAM
 Text Label 3000 1900 0    50   ~ 0
 CERAM
 $Comp
@@ -667,7 +667,7 @@ Connection ~ 5450 3400
 Text Label 4100 2350 0    50   ~ 0
 RD
 Text Label 4100 2550 0    50   ~ 0
-A19
+RAM
 Wire Wire Line
 	4100 2350 4450 2350
 Wire Wire Line
@@ -1101,7 +1101,7 @@ Wire Wire Line
 Text Label 6250 1700 0    50   ~ 0
 WR
 Text Label 6250 1900 0    50   ~ 0
-A19
+RAM
 Wire Wire Line
 	6250 1700 6500 1700
 Wire Wire Line
@@ -1117,7 +1117,7 @@ Wire Wire Line
 Text Label 5200 850  0    50   ~ 0
 IOMODE
 Text Label 5200 1050 0    50   ~ 0
-A19
+RAM
 Wire Wire Line
 	5200 850  5750 850 
 Wire Wire Line
@@ -1261,7 +1261,7 @@ L 74xx:74HC04 U1
 U 1 1 5FDF66E4
 P 2150 5900
 F 0 "U1" H 2150 6217 50  0000 C CNN
-F 1 "74AC04" H 2150 6126 50  0000 C CNN
+F 1 "74HC04" H 2150 6126 50  0000 C CNN
 F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 2150 5900 50  0001 C CNN
 F 3 "http://www.nxp.com/documents/data_sheet/74HC_HCT04.pdf" H 2150 5900 50  0001 C CNN
 	1    2150 5900
@@ -1272,7 +1272,7 @@ L 74xx:74HC04 U1
 U 7 1 5FDF696D
 P 1150 6750
 F 0 "U1" H 1380 6796 50  0000 L CNN
-F 1 "74AC04" H 1380 6705 50  0000 L CNN
+F 1 "74HC04" H 1380 6705 50  0000 L CNN
 F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 1150 6750 50  0001 C CNN
 F 3 "http://www.nxp.com/documents/data_sheet/74HC_HCT04.pdf" H 1150 6750 50  0001 C CNN
 	7    1150 6750
@@ -1283,7 +1283,7 @@ L 74xx:74HC04 U1
 U 2 1 5FDF9786
 P 2850 5900
 F 0 "U1" H 2850 6217 50  0000 C CNN
-F 1 "74AC04" H 2850 6126 50  0000 C CNN
+F 1 "74HC04" H 2850 6126 50  0000 C CNN
 F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 2850 5900 50  0001 C CNN
 F 3 "http://www.nxp.com/documents/data_sheet/74HC_HCT04.pdf" H 2850 5900 50  0001 C CNN
 	2    2850 5900
@@ -1294,7 +1294,7 @@ L 74xx:74HC04 U1
 U 3 1 5FDF9A3D
 P 3500 5900
 F 0 "U1" H 3500 6217 50  0000 C CNN
-F 1 "74AC04" H 3500 6126 50  0000 C CNN
+F 1 "74HC04" H 3500 6126 50  0000 C CNN
 F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 3500 5900 50  0001 C CNN
 F 3 "http://www.nxp.com/documents/data_sheet/74HC_HCT04.pdf" H 3500 5900 50  0001 C CNN
 	3    3500 5900
@@ -1305,7 +1305,7 @@ L 74xx:74HC04 U1
 U 4 1 5FDF9B06
 P 6050 6150
 F 0 "U1" H 6050 6467 50  0000 C CNN
-F 1 "74AC04" H 6050 6376 50  0000 C CNN
+F 1 "74HC04" H 6050 6376 50  0000 C CNN
 F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 6050 6150 50  0001 C CNN
 F 3 "http://www.nxp.com/documents/data_sheet/74HC_HCT04.pdf" H 6050 6150 50  0001 C CNN
 	4    6050 6150
@@ -1316,7 +1316,7 @@ L 74xx:74HC04 U1
 U 5 1 5FDF9BE1
 P 2600 1900
 F 0 "U1" H 2600 2217 50  0000 C CNN
-F 1 "74AC04" H 2600 2126 50  0000 C CNN
+F 1 "74HC04" H 2600 2126 50  0000 C CNN
 F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 2600 1900 50  0001 C CNN
 F 3 "http://www.nxp.com/documents/data_sheet/74HC_HCT04.pdf" H 2600 1900 50  0001 C CNN
 	5    2600 1900
@@ -1327,7 +1327,7 @@ L 74xx:74HC04 U1
 U 6 1 5FDF9CB4
 P 4350 1550
 F 0 "U1" H 4350 1867 50  0000 C CNN
-F 1 "74AC04" H 4350 1776 50  0000 C CNN
+F 1 "74HC04" H 4350 1776 50  0000 C CNN
 F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 4350 1550 50  0001 C CNN
 F 3 "http://www.nxp.com/documents/data_sheet/74HC_HCT04.pdf" H 4350 1550 50  0001 C CNN
 	6    4350 1550
@@ -2061,7 +2061,7 @@ Wire Wire Line
 Wire Wire Line
 	4650 1550 4750 1550
 Text Label 4450 1750 0    50   ~ 0
-A19
+RAM
 Wire Wire Line
 	4450 1750 4750 1750
 Text Label 5450 1650 0    50   ~ 0

@@ -83,7 +83,7 @@ A13
 Text Label 6050 4350 1    50   ~ 0
 A14
 Text Label 6550 4350 1    50   ~ 0
-A19
+RAM
 Text Label 6650 4350 1    50   ~ 0
 RD
 Text Label 6750 4350 1    50   ~ 0

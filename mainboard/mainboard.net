@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source C:\Users\Reinhard\Documents\GitHub\ByteMachine\mainboard\mainboard.sch)
-    (date "06.06.2020 13:28:05")
+    (date "12.06.2020 09:08:33")
     (tool "Eeschema (5.0.0)")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -177,7 +177,7 @@
       (sheetpath (names /) (tstamps /))
       (tstamp 5FC37FF0))
     (comp (ref U1)
-      (value 74AC04)
+      (value 74HC04)
       (footprint Package_DIP:DIP-14_W7.62mm_Socket)
       (datasheet http://www.nxp.com/documents/data_sheet/74HC_HCT04.pdf)
       (libsource (lib 74xx) (part 74HC04) (description "hex inverter"))
@@ -926,7 +926,7 @@
       (node (ref JBUS1) (pin 5))
       (node (ref U3) (pin 12))
       (node (ref U1) (pin 13)))
-    (net (code 33) (name /A19)
+    (net (code 33) (name /RAM)
       (node (ref U3) (pin 13))
       (node (ref JBUS1) (pin 7))
       (node (ref U4) (pin 5))
