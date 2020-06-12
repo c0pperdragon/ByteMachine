@@ -1,0 +1,60 @@
+EESchema Schematic File Version 4
+EELAYER 26 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title "65c816 CPU for ByteMachine"
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L customparts:w65c816 U1
+U 1 1 5EE4128A
+P 2700 3150
+F 0 "U1" H 2800 3200 50  0000 R CNN
+F 1 "w65c816" V 2700 2150 50  0000 R CNN
+F 2 "" H 2700 3150 50  0001 C CNN
+F 3 "" H 2700 3150 50  0001 C CNN
+	1    2700 3150
+	0    -1   -1   0   
+$EndComp
+$Comp
+L customparts:74HC32 U3
+U 1 1 5EE4132A
+P 7050 3150
+F 0 "U3" H 7100 3150 50  0000 R CNN
+F 1 "74HC32" V 7050 2900 50  0000 R CNN
+F 2 "" H 7050 3150 50  0001 C CNN
+F 3 "" H 7050 3150 50  0001 C CNN
+	1    7050 3150
+	0    -1   -1   0   
+$EndComp
+$Comp
+L customparts:74HC04 U4
+U 1 1 5EE41390
+P 8400 3150
+F 0 "U4" H 8450 3150 50  0000 R CNN
+F 1 "74HC04" V 8400 2900 50  0000 R CNN
+F 2 "" H 8400 3150 50  0001 C CNN
+F 3 "" H 8400 3150 50  0001 C CNN
+	1    8400 3150
+	0    -1   -1   0   
+$EndComp
+$Comp
+L customparts:74HC573 U2
+U 1 1 5EE4457C
+P 6400 3150
+F 0 "U2" H 6350 2050 50  0000 L CNN
+F 1 "74HC573" V 6400 2450 50  0000 L CNN
+F 2 "" H 6400 3150 50  0001 C CNN
+F 3 "" H 6400 3150 50  0001 C CNN
+	1    6400 3150
+	0    1    1    0   
+$EndComp
+$EndSCHEMATC
