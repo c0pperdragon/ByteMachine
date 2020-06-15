@@ -11,15 +11,29 @@ but this is not really reliable.
 The schematic diagram (65c05board.pdf) is designed to directly show the breadboard layout. The connections of some bus lines 
 are only shown by their designators to avoid too much clutter in the diagram.
 
+## Control signal generation
+
+The 65c02 provides a different set of control lines to access the memory than the main board expects. It basically just generates a single 
+RWB signal which tells the rest of the system if the current CPU cycle is meant to read from memory or write to it.
+The main board on the other hand expects explicit RD and WR pulses for each access and does not care itself for the CPU clock
+(it generates the clock, but does not use it itself in any way). To produce the correct WR and RD pulses, the CPU board 
+needs 3 NAND-gates to join together the clock and the RWB line to create the necessary half-cycle long negative-going pulses.
+
+The 4th NAND-gate on the IC is used to invert the address line A15 to produce the RAM signal. So the lower 32K of the address space
+access the RAM and the higher 32K of address space will address the ROM.
+
 ## Memory map
 
-The 64K address space which the 6502 can access using its 16 address lines are translated to the address spaces of the ByteMachine
+The 64K address space which the 65C02 can access using its 16 address lines are translated to the address spaces of the ByteMachine
 in the following way:
 
-| CPU        | main board       |
-| ---------- | ---------------- |
-| 0000..7FFF | RAM              | 
-| 8000..FFFF | ROM 08000..0FFFF | 
+| CPU address| type | mem address  |
+| ---------- | ---- | ------------ |
+| 0000..7FFF | RAM  | 78000..7FFFF | 
+| 8000..FFFF | ROM  | 78000..7FFFF | 
+
+I intentionally use just this portion of the ROM so other areas can be used for different CPU boards without the
+need to overwrite this area.
 
 ## More possibilities
 
