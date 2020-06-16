@@ -11,6 +11,8 @@ but this is not really reliable.
 The schematic diagram (65c05board.pdf) is designed to directly show the breadboard layout. The connections of some bus lines 
 are only shown by their designators to avoid too much clutter in the diagram.
 
+![alt text](breadboard.jpg "Breadboard before connecting to the main board")
+
 ## Control signal generation
 
 The 65c02 provides a different set of control lines to access the memory than the main board expects. It basically just generates a single 
@@ -40,8 +42,7 @@ need to overwrite this area.
 With additional 74-series logic it is surely possible to implement some kind of bank switching scheme to access a larger area 
 of the ByteMachine's total address space. This is open to experiment by anyone who wants to try.
 
-## Gallery
 
-![alt text](gallery/breadboard.jpg "Breadboard before connecting to the main board")
-![alt text](gallery/complete.jpg "Complete system")
+
+
 
