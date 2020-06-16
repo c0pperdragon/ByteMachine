@@ -5,46 +5,46 @@
 ; The output LEDs will play an animation which should look familiar to anyone who knows the 
 ; 80ths TV show "Knight Rider".
 
-8000 80 C0 60 30 18 0C 06 03 01 03 06 0C 18 30 60 C0  ; pattern sequence
+808000 80 C0 60 30 18 0C 06 03 01 03 06 0C 18 30 60 C0  ; pattern sequence
 
-FF00 A9 00          LDA #$00       ; initialize counter
-FF02 85 00          STA $00 
+80FF00 A9 00          LDA #$00         ; initialize counter
+80FF02 85 00          STA $00 
 
-FF04 A5 00          LDA $00        ; read counter from low RAM
-FF06 18             CLC            ; increment up to 15 
-FF07 69 01          ADC #1
-FF09 29 0F          AND #$0F
-FF0B 85 00          STA $00        ; write incremented counter to low RAM
+80FF04 A5 00          LDA $00          ; read counter from low RAM
+80FF06 18             CLC              ; increment up to 15 
+80FF07 69 01          ADC #1
+80FF09 29 0F          AND #$0F
+80FF0B 85 00          STA $00          ; write incremented counter to low RAM
 
-FF0D AA             TAX
-FF0E BD 00 80       LDA $8000,X    ; fetch output pattern from low ROM
-FF11 8D FF 7F       STA $7FFF      ; write to high RAM
-FF14 AD FF 7F       LDA $7FFF      ; read back from high RAM
+80FF0D AA             TAX
+80FF0E BF 00 80 80    LDA $808000,X    ; fetch output pattern from ROM
+80FF12 8F FF FF 07    STA $07FFFF      ; write to high RAM
+80FF16 AF FF FF 07    LDA $07FFFF      ; read from high RAM
 
-FF17 8D BB BB       STA $BBBB      ; write pattern to output port (switches to IO mode)
-FF1A 0D 55 55       ORA $5555      ; read IO port and modify output pattern
-FF1D 8D BB BB       STA $BBBB      ; write modified pattern to output port
-FF20 85 01          STA $01        ; dummy write to RAM to disable IO mode
+80FF1A 8F BB BB 80    STA $80BBBB      ; write pattern to output port (switches to IO mode)
+80FF1E 05 00          ORA $00          ; read IO port and modify output pattern
+80FF20 8F BB BB 80    STA $80BBBB      ; write modified pattern to output port
+80FF24 85 01          STA $01          ; dummy write to RAM to disable IO mode
 
-FF22 A9 05          LDA #5         ; waiting loop
-FF24 A0 00      w0: LDY #0
-FF26 A2 00      w1: LDX #0
-FF28 E8         w2: INX
-FF29 D0 FD          BNE w2
-FF2B C8             INY
-FF2C D0 F8          BNE w1
-FF2E 38             SEC 
-FF2F E9 01          SBC #1
-FF31 D0 F1          BNE w0
+80FF26 A9 05          LDA #5           ; waiting loop
+80FF28 A0 00      w0: LDY #0
+80FF2A A2 00      w1: LDX #0
+80FF2C E8         w2: INX
+80FF2D D0 FD          BNE w2
+80FF2F C8             INY
+80FF30 D0 F8          BNE w1
+80FF32 38             SEC 
+80FF33 E9 01          SBC #1
+80FF35 D0 F1          BNE w0
 
-FF33 4C 04 FF       JMP $FF04
+80FF37 5C 04 FF 80    JMP $80FF04
           
-; bootstrap code to switch to native mode with linear address space
-FFF0 18             CLC     
-FFF1 FB             XCE             ; turn on native mode
-FFF2 DC F6 FF 00    JML $FFFFF6     ; jump to permanent ROM area 
-FFF6 4C 00 FF       JMP $FF00       ; start user program
-FFF9 FF
-FFFA FF
-FFFB FF
-FFFC F0 FF                          ; reset vector
+; Bootstrap code to switch to native mode that can access all RAM and all ROM.
+; While in emulation mode, this data will also be reached via bank 0 (000000 - 00FFFF) instead of RAM
+80FFF0 5C F4 FF 80    JMP $80FFF4      ; jump to native mode ROM area 
+80FFF4 18             CLC     
+80FFF5 FB             XCE              ; turn off emulation mode (X and M flags are still 1)
+80FFF6 5C 00 FF 80    JMP $80FF00      ; start user program
+80FFFA FF
+80FFFB FF
+80FFFC F0 FF                           ; reset vector is pointing to bank 0
