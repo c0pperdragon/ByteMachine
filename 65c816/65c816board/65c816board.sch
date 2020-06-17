@@ -314,8 +314,6 @@ Wire Wire Line
 	3150 2650 3150 2800
 Connection ~ 2450 4100
 Wire Wire Line
-	2450 4100 2850 4100
-Wire Wire Line
 	2950 3500 2950 4100
 Connection ~ 2950 4100
 Wire Wire Line
@@ -343,24 +341,6 @@ Wire Wire Line
 Connection ~ 3250 4100
 Wire Wire Line
 	3250 4100 4800 4100
-$Comp
-L Device:R_Small R1
-U 1 1 5EE9C159
-P 2850 3750
-F 0 "R1" V 2900 3550 50  0000 L CNN
-F 1 "1k" V 2900 3850 50  0000 L CNN
-F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal" H 2850 3750 50  0001 C CNN
-F 3 "~" H 2850 3750 50  0001 C CNN
-	1    2850 3750
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	2850 3500 2850 3650
-Wire Wire Line
-	2850 3850 2850 4100
-Connection ~ 2850 4100
-Wire Wire Line
-	2850 4100 2950 4100
 NoConn ~ 2850 2800
 NoConn ~ 3350 3500
 NoConn ~ 2750 3500
@@ -664,4 +644,7 @@ Connection ~ 7150 2750
 Wire Wire Line
 	7150 2750 7400 2750
 NoConn ~ 7250 2800
+Wire Wire Line
+	2450 4100 2950 4100
+NoConn ~ 2850 3500
 $EndSCHEMATC
