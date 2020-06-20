@@ -22,7 +22,7 @@ FF11 8D FF 7F       STA $7FFF      ; write to high RAM
 FF14 AD FF 7F       LDA $7FFF      ; read back from high RAM
 
 FF17 8D BB BB       STA $BBBB      ; write pattern to output port (switches to IO mode)
-FF1A 0D 55 55       ORA $5555      ; read IO port and modify output pattern
+FF1A 2D 55 55       AND $5555      ; read IO port and modify output pattern
 FF1D 8D BB BB       STA $BBBB      ; write modified pattern to output port
 FF20 85 01          STA $01        ; dummy write to RAM to disable IO mode
 

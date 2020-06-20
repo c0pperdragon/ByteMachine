@@ -15,17 +15,6 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L customparts:w65c02 U1
-U 1 1 5ED92BAA
-P 3800 2900
-F 0 "U1" H 3850 2950 50  0000 R CNN
-F 1 "W65C02" V 3800 2000 50  0000 R CNN
-F 2 "Package_DIP:DIP-40_W15.24mm_Socket" H 3800 2900 50  0001 C CNN
-F 3 "" H 3800 2900 50  0001 C CNN
-	1    3800 2900
-	0    -1   -1   0   
-$EndComp
-$Comp
 L Connector:Conn_01x34_Male J1
 U 1 1 5ED92C40
 P 5550 4700
@@ -83,13 +72,13 @@ A13
 Text Label 6050 4450 1    50   ~ 0
 A14
 Text Label 6550 4450 1    50   ~ 0
-RAM
+ROM
 Text Label 6650 4450 1    50   ~ 0
-RD
+RD#
 Text Label 6750 4450 1    50   ~ 0
-WR
+WR#
 Text Label 6850 4450 1    50   ~ 0
-RES
+RES#
 Text Label 6950 4450 1    50   ~ 0
 CLK
 Text Label 7050 4450 1    50   ~ 0
@@ -114,26 +103,10 @@ Wire Wire Line
 	4550 4500 4550 4450
 Wire Wire Line
 	3500 3800 3650 3800
-$Comp
-L customparts:74HC00 U2
-U 1 1 5EDB7C09
-P 6450 2900
-F 0 "U2" H 6500 2900 50  0000 R CNN
-F 1 "74HC00" V 6450 2650 50  0000 R CNN
-F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 6450 2900 50  0001 C CNN
-F 3 "" H 6450 2900 50  0001 C CNN
-	1    6450 2900
-	0    -1   -1   0   
-$EndComp
 Wire Wire Line
 	3850 2550 3850 2100
 Wire Wire Line
-	6650 3250 6650 3500
-Connection ~ 6650 3500
-Wire Wire Line
 	4450 2550 4450 2200
-Wire Wire Line
-	7500 2300 7500 3400
 Wire Wire Line
 	6550 2550 6550 2500
 Wire Wire Line
@@ -274,8 +247,6 @@ Connection ~ 5900 3800
 Wire Wire Line
 	5900 2500 6000 2500
 Wire Wire Line
-	6550 2500 7300 2500
-Wire Wire Line
 	7300 3000 7300 3300
 Wire Wire Line
 	7300 2800 7300 2500
@@ -306,24 +277,7 @@ Wire Wire Line
 Wire Wire Line
 	4050 2500 4250 2500
 Wire Wire Line
-	7150 2300 7500 2300
-Wire Wire Line
-	6400 2200 6950 2200
-Wire Wire Line
-	6950 2550 6950 2400
-Wire Wire Line
-	7050 2550 7050 2400
-Wire Wire Line
-	7150 2300 7150 2550
-Wire Wire Line
-	6650 2550 6650 2400
-Wire Wire Line
-	6650 2400 6750 2400
-Wire Wire Line
-	6750 2400 6750 2550
-Wire Wire Line
-	6950 2400 7050 2400
-Connection ~ 6950 2400
+	6400 2200 6650 2200
 Wire Wire Line
 	6750 3600 6650 3600
 Wire Wire Line
@@ -332,28 +286,9 @@ Connection ~ 6850 3500
 Wire Wire Line
 	4550 1850 4550 2550
 Wire Wire Line
-	6950 2200 6950 2400
-Wire Wire Line
-	6650 2400 5350 2400
-Wire Wire Line
-	5350 2400 5350 2550
-Connection ~ 6650 2400
-Wire Wire Line
-	6850 2550 6850 2300
-Wire Wire Line
-	6850 2300 6300 2300
-Wire Wire Line
-	6300 2300 6300 3400
-Wire Wire Line
 	4250 2500 4250 2550
 Wire Wire Line
 	4150 2550 4150 2300
-Wire Wire Line
-	4150 2300 6200 2300
-Wire Wire Line
-	6200 2300 6200 3500
-Wire Wire Line
-	6300 3400 6550 3400
 Wire Wire Line
 	7300 3800 7300 3900
 Wire Wire Line
@@ -392,8 +327,6 @@ Wire Wire Line
 Wire Wire Line
 	6000 2500 6000 3800
 Wire Wire Line
-	6200 3500 6550 3500
-Wire Wire Line
 	6650 3600 6650 4500
 Wire Wire Line
 	6750 3700 6750 4500
@@ -407,15 +340,7 @@ Wire Wire Line
 	6950 3500 6950 4500
 Connection ~ 7300 3300
 Wire Wire Line
-	6950 3400 7300 3400
-Wire Wire Line
 	7050 3800 7400 3800
-Wire Wire Line
-	6550 3500 6650 3500
-Wire Wire Line
-	6550 3400 6550 4500
-Wire Wire Line
-	7300 3400 7500 3400
 Wire Wire Line
 	7300 3300 7300 3800
 Wire Wire Line
@@ -476,6 +401,88 @@ Wire Wire Line
 Wire Wire Line
 	6450 3800 6450 4500
 Wire Wire Line
-	3650 3800 4150 3800
-NoConn ~ 3950 3250
+	3650 3800 3950 3800
+$Comp
+L customparts:w65c02 U1
+U 1 1 5ED92BAA
+P 3800 2900
+F 0 "U1" H 3850 2950 50  0000 R CNN
+F 1 "W65C02" V 3800 2000 50  0000 R CNN
+F 2 "Package_DIP:DIP-40_W15.24mm_Socket" H 3800 2900 50  0001 C CNN
+F 3 "" H 3800 2900 50  0001 C CNN
+	1    3800 2900
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Device:R_Small R1
+U 1 1 5EECB72C
+P 3950 3500
+F 0 "R1" H 4009 3546 50  0000 L CNN
+F 1 "1k" H 4009 3455 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal" H 3950 3500 50  0001 C CNN
+F 3 "~" H 3950 3500 50  0001 C CNN
+	1    3950 3500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3950 3250 3950 3400
+Wire Wire Line
+	3950 3600 3950 3800
+Connection ~ 3950 3800
+Wire Wire Line
+	3950 3800 4150 3800
+Wire Wire Line
+	4150 2300 6150 2300
+Wire Wire Line
+	6550 4500 6550 4450
+Text Label 5350 1850 1    50   ~ 0
+ROM
+Wire Wire Line
+	5350 1850 5350 2550
+Wire Wire Line
+	6150 2300 6150 3500
+Wire Wire Line
+	6150 3500 6650 3500
+Connection ~ 6650 3500
+Wire Wire Line
+	6650 3250 6650 3500
+Wire Wire Line
+	6950 3400 6300 3400
+Wire Wire Line
+	6300 3400 6300 2300
+Wire Wire Line
+	6300 2300 6850 2300
+$Comp
+L customparts:74HC00 U2
+U 1 1 5EDB7C09
+P 6450 2900
+F 0 "U2" H 6500 2900 50  0000 R CNN
+F 1 "74HC00" V 6450 2650 50  0000 R CNN
+F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 6450 2900 50  0001 C CNN
+F 3 "" H 6450 2900 50  0001 C CNN
+	1    6450 2900
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	6550 2500 6950 2500
+Wire Wire Line
+	6650 2550 6650 2200
+Connection ~ 6650 2200
+Wire Wire Line
+	6650 2200 6750 2200
+Wire Wire Line
+	6750 2200 6750 2550
+Wire Wire Line
+	6850 2550 6850 2300
+Wire Wire Line
+	6950 2550 6950 2500
+Connection ~ 6950 2500
+Wire Wire Line
+	6950 2500 7050 2500
+Wire Wire Line
+	7050 2550 7050 2500
+Connection ~ 7050 2500
+Wire Wire Line
+	7050 2500 7300 2500
+NoConn ~ 7150 2550
 $EndSCHEMATC

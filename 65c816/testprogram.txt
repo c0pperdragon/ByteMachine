@@ -22,7 +22,7 @@
 80FF16 AF FF FF 07    LDA $07FFFF      ; read from high RAM
 
 80FF1A 8F BB BB 80    STA $80BBBB      ; write pattern to output port (switches to IO mode)
-80FF1E 05 00          ORA $00          ; read IO port and modify output pattern
+80FF1E 25 00          AND $00          ; read IO port and modify output pattern
 80FF20 8F BB BB 80    STA $80BBBB      ; write modified pattern to output port
 80FF24 85 01          STA $01          ; dummy write to RAM to disable IO mode
 

@@ -102,7 +102,7 @@ A17
 Text Label 1200 2350 0    50   ~ 0
 A18
 Text Label 1200 2250 0    50   ~ 0
-RAM
+ROM
 $Comp
 L power:GND #PWR04
 U 1 1 5ECA7CBD
@@ -128,11 +128,11 @@ $EndComp
 Text Label 1200 1850 0    50   ~ 0
 CLK
 Text Label 1200 1950 0    50   ~ 0
-RES
+RES#
 Text Label 1200 2050 0    50   ~ 0
-WR
+WR#
 Text Label 1200 2150 0    50   ~ 0
-RD
+RD#
 Wire Wire Line
 	1150 1650 1200 1650
 Wire Wire Line
@@ -360,9 +360,9 @@ F 3 "http://www.ti.com/lit/gpn/sn7400" H 6700 3750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text Label 2100 1900 0    50   ~ 0
-RAM
+ROM
 Text Label 3000 1900 0    50   ~ 0
-CERAM
+RAM
 $Comp
 L 74xx:74LS32 U3
 U 1 1 5ECD3CA0
@@ -375,9 +375,9 @@ F 3 "http://www.ti.com/lit/gpn/sn74LS32" H 2600 2500 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text Label 3350 3700 0    50   ~ 0
-WR
+WR#
 Text Label 1950 2400 0    50   ~ 0
-RD
+RD#
 Text Label 1950 2600 0    50   ~ 0
 IOMODE
 Wire Wire Line
@@ -665,7 +665,7 @@ Wire Wire Line
 	5450 3350 5450 3400
 Connection ~ 5450 3400
 Text Label 4100 2350 0    50   ~ 0
-RD
+RD#
 Text Label 4100 2550 0    50   ~ 0
 RAM
 Wire Wire Line
@@ -824,17 +824,6 @@ Wire Wire Line
 	7800 5100 7950 5100
 Wire Wire Line
 	7800 5000 7950 5000
-$Comp
-L power:GND #PWR042
-U 1 1 5F00B794
-P 10750 2800
-F 0 "#PWR042" H 10750 2550 50  0001 C CNN
-F 1 "GND" H 10755 2627 50  0000 C CNN
-F 2 "" H 10750 2800 50  0001 C CNN
-F 3 "" H 10750 2800 50  0001 C CNN
-	1    10750 2800
-	-1   0    0    1   
-$EndComp
 $Comp
 L power:GND #PWR035
 U 1 1 5F03240F
@@ -1099,7 +1088,7 @@ Wire Wire Line
 Wire Wire Line
 	9050 2000 9100 2000
 Text Label 6250 1700 0    50   ~ 0
-WR
+WR#
 Text Label 6250 1900 0    50   ~ 0
 RAM
 Wire Wire Line
@@ -1109,7 +1098,7 @@ Wire Wire Line
 Wire Wire Line
 	7600 3850 7950 3850
 Text Label 6300 1150 0    50   ~ 0
-RD
+RD#
 Wire Wire Line
 	6300 1150 6500 1150
 Wire Wire Line
@@ -1530,7 +1519,7 @@ F 3 "" H 4450 7400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Text Label 6450 6150 0    50   ~ 0
-RES
+RES#
 Wire Wire Line
 	6350 6150 6450 6150
 Wire Wire Line
@@ -1699,7 +1688,7 @@ L Device:R_Network08 RN1
 U 1 1 5F268690
 P 10550 3250
 F 0 "RN1" V 9950 3250 50  0000 C CNN
-F 1 "22k" V 10050 3250 50  0000 C CNN
+F 1 "10k" V 10050 3250 50  0000 C CNN
 F 2 "Resistor_THT:R_Array_SIP9" V 11025 3250 50  0001 C CNN
 F 3 "http://www.vishay.com/docs/31509/csc.pdf" H 10550 3250 50  0001 C CNN
 	1    10550 3250
@@ -1947,8 +1936,6 @@ Connection ~ 9800 1000
 Wire Wire Line
 	9800 1000 10000 1000
 Wire Wire Line
-	10750 2800 10750 2850
-Wire Wire Line
 	9800 1000 9800 1300
 Wire Wire Line
 	9350 1000 9350 900 
@@ -1962,7 +1949,7 @@ Connection ~ 9350 1000
 NoConn ~ 9400 1100
 NoConn ~ 9400 1400
 Text Label 3350 4400 0    50   ~ 0
-CERAM
+ROM
 Text Label 3350 4200 0    50   ~ 0
 OERAM
 Text Label 5500 4200 0    50   ~ 0
@@ -2055,7 +2042,7 @@ Wire Wire Line
 Wire Wire Line
 	6000 4600 6400 4600
 Text Label 3850 1550 0    50   ~ 0
-WR
+WR#
 Wire Wire Line
 	3850 1550 4050 1550
 Wire Wire Line
@@ -2109,4 +2096,17 @@ Text Notes 2100 5450 0    79   ~ 0
 CLOCK
 Text Notes 4750 5450 0    79   ~ 0
 POWER-ON RESET
+$Comp
+L power:+5V #PWR?
+U 1 1 5EF0C22D
+P 10750 2750
+F 0 "#PWR?" H 10750 2600 50  0001 C CNN
+F 1 "+5V" H 10765 2923 50  0000 C CNN
+F 2 "" H 10750 2750 50  0001 C CNN
+F 3 "" H 10750 2750 50  0001 C CNN
+	1    10750 2750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	10750 2750 10750 2850
 $EndSCHEMATC

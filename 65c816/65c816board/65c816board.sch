@@ -15,22 +15,11 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L customparts:74HC32 U3
+L customparts:74HC32 U4
 U 1 1 5EE4132A
-P 6550 3150
-F 0 "U3" H 6600 3150 50  0000 R CNN
-F 1 "74HC32" V 6550 2900 50  0000 R CNN
-F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 6550 3150 50  0001 C CNN
-F 3 "" H 6550 3150 50  0001 C CNN
-	1    6550 3150
-	0    -1   -1   0   
-$EndComp
-$Comp
-L customparts:74HC04 U4
-U 1 1 5EE41390
 P 7700 3150
 F 0 "U4" H 7750 3150 50  0000 R CNN
-F 1 "74HC04" V 7700 2900 50  0000 R CNN
+F 1 "74AC32" V 7700 2900 50  0000 R CNN
 F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 7700 3150 50  0001 C CNN
 F 3 "" H 7700 3150 50  0001 C CNN
 	1    7700 3150
@@ -41,7 +30,7 @@ L customparts:74HC573 U2
 U 1 1 5EE4457C
 P 6050 3150
 F 0 "U2" H 6000 2050 50  0000 L CNN
-F 1 "74HC573" V 6050 2450 50  0000 L CNN
+F 1 "74AC573" V 6050 2450 50  0000 L CNN
 F 2 "Package_DIP:DIP-20_W7.62mm_Socket" H 6050 3150 50  0001 C CNN
 F 3 "" H 6050 3150 50  0001 C CNN
 	1    6050 3150
@@ -173,7 +162,7 @@ A17
 Text Label 5350 4700 1    50   ~ 0
 A18
 Text Label 5450 4700 1    50   ~ 0
-RAM
+ROM
 Wire Wire Line
 	2400 4100 2450 4100
 Wire Wire Line
@@ -291,8 +280,6 @@ $EndComp
 Wire Wire Line
 	8550 3050 8550 2750
 Wire Wire Line
-	8550 2750 8300 2750
-Wire Wire Line
 	7800 2750 7800 2800
 Wire Wire Line
 	8550 3250 8550 3550
@@ -360,11 +347,11 @@ Wire Wire Line
 Wire Wire Line
 	3750 1800 3750 2800
 Text Label 5550 4700 1    50   ~ 0
-RD
+RD#
 Text Label 5650 4700 1    50   ~ 0
-WR
+WR#
 Text Label 5750 4700 1    50   ~ 0
-RES
+RES#
 Text Label 5850 4700 1    50   ~ 0
 CLK
 Text Label 5950 4700 1    50   ~ 0
@@ -469,8 +456,6 @@ Wire Wire Line
 Wire Wire Line
 	3350 2800 3350 2400
 Wire Wire Line
-	3350 2400 6400 2400
-Wire Wire Line
 	5550 3800 6850 3800
 Wire Wire Line
 	5550 3800 5550 4750
@@ -485,14 +470,7 @@ Wire Wire Line
 Wire Wire Line
 	6650 3550 6450 3550
 Wire Wire Line
-	6450 3550 6450 2450
-Wire Wire Line
-	6400 2400 6400 3600
-Connection ~ 6400 2400
-Wire Wire Line
 	7900 3500 7900 3550
-Wire Wire Line
-	7900 3550 8000 3550
 Wire Wire Line
 	8000 3550 8000 3500
 Wire Wire Line
@@ -509,21 +487,9 @@ Connection ~ 6750 3700
 Wire Wire Line
 	6750 3700 6750 3500
 Wire Wire Line
-	7800 3700 7800 3500
+	7800 3700 7800 3550
 Wire Wire Line
-	8100 2800 8100 2400
-Wire Wire Line
-	6400 2400 8100 2400
-Wire Wire Line
-	8200 2450 8200 2800
-NoConn ~ 8400 2800
-Wire Wire Line
-	8300 2800 8300 2750
-Connection ~ 8300 2750
-Wire Wire Line
-	8300 2750 7800 2750
-Wire Wire Line
-	8000 2800 8000 2600
+	8100 2800 8100 2600
 Wire Wire Line
 	5750 4000 2600 4000
 Wire Wire Line
@@ -578,73 +544,117 @@ Connection ~ 8650 4100
 Wire Wire Line
 	8650 4100 8800 4100
 Wire Wire Line
-	8100 3550 8100 3650
-Wire Wire Line
-	8100 3650 5050 3650
-Connection ~ 8100 3550
-Wire Wire Line
-	5050 3650 5050 3500
-Wire Wire Line
 	5350 3500 5350 4750
 Wire Wire Line
 	4250 1800 4250 2800
 Wire Wire Line
-	4150 1800 4150 2100
-Wire Wire Line
 	4050 1800 4050 2800
-Wire Wire Line
-	6450 2450 8200 2450
 Wire Wire Line
 	3250 2800 3250 2050
 Wire Wire Line
-	3250 2050 6850 2050
-Connection ~ 4150 2100
-Wire Wire Line
-	4150 2100 4150 2800
-Wire Wire Line
-	7900 2650 7900 2800
-Wire Wire Line
-	8000 2600 5450 2600
-Wire Wire Line
 	5450 2600 5450 2800
 Wire Wire Line
-	6850 2750 7050 2750
-Wire Wire Line
-	3050 2700 2550 2700
-Wire Wire Line
-	2550 2700 2550 4050
-Wire Wire Line
-	2550 4050 8300 4050
-Wire Wire Line
-	3050 2700 3050 2800
-Wire Wire Line
-	8300 3500 8300 4050
-Wire Wire Line
-	6650 2750 6750 2750
-Wire Wire Line
-	6750 2750 6850 2750
-Wire Wire Line
-	6750 2100 4150 2100
-Wire Wire Line
-	6750 2100 6750 2800
-Wire Wire Line
-	6850 2050 6850 2800
+	8300 3500 8300 3650
 Wire Wire Line
 	6950 2800 6950 2650
 Wire Wire Line
-	6950 2650 7900 2650
-Wire Wire Line
-	7050 2750 7050 2800
-Connection ~ 7050 2750
-Wire Wire Line
-	7050 2750 7150 2750
-Wire Wire Line
-	7150 2750 7150 2800
-Connection ~ 7150 2750
-Wire Wire Line
-	7150 2750 7400 2750
-NoConn ~ 7250 2800
-Wire Wire Line
 	2450 4100 2950 4100
 NoConn ~ 2850 3500
+$Comp
+L customparts:74HC00 U3
+U 1 1 5EF3F1D0
+P 6550 3150
+F 0 "U3" H 6650 3150 50  0000 R CNN
+F 1 "74AC00" V 6550 2900 50  0000 R CNN
+F 2 "" H 6550 3150 50  0001 C CNN
+F 3 "" H 6550 3150 50  0001 C CNN
+	1    6550 3150
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	6650 2750 7400 2750
+Wire Wire Line
+	5450 2600 8100 2600
+Wire Wire Line
+	8000 2050 8000 2800
+Wire Wire Line
+	3250 2050 8000 2050
+Wire Wire Line
+	4150 2150 7900 2150
+Connection ~ 4150 2150
+Wire Wire Line
+	4150 2150 4150 2800
+Wire Wire Line
+	7900 2150 7900 2800
+Wire Wire Line
+	4150 1800 4150 2150
+Wire Wire Line
+	6450 2400 6450 3550
+Wire Wire Line
+	3350 2400 6450 2400
+Wire Wire Line
+	6450 2400 6750 2400
+Wire Wire Line
+	6750 2400 6750 2800
+Connection ~ 6450 2400
+Wire Wire Line
+	6750 2400 6850 2400
+Wire Wire Line
+	6850 2400 6850 2800
+Connection ~ 6750 2400
+Wire Wire Line
+	6950 2650 6400 2650
+Wire Wire Line
+	6400 2650 6400 3600
+Wire Wire Line
+	7800 3550 7900 3550
+Connection ~ 7800 3550
+Wire Wire Line
+	7800 3550 7800 3500
+Wire Wire Line
+	8000 3550 8100 3550
+Connection ~ 8100 3550
+Wire Wire Line
+	7150 2650 7150 2800
+Wire Wire Line
+	7050 2800 7050 2650
+Wire Wire Line
+	7050 2650 7150 2650
+Wire Wire Line
+	8300 3650 8800 3650
+Wire Wire Line
+	8800 3650 8800 2600
+Wire Wire Line
+	8800 2600 8300 2600
+Wire Wire Line
+	8200 2600 8200 2650
+Wire Wire Line
+	7800 2750 8550 2750
+Wire Wire Line
+	8300 2600 8300 2800
+Connection ~ 8300 2600
+Wire Wire Line
+	8300 2600 8200 2600
+Wire Wire Line
+	8400 2800 8400 2250
+Wire Wire Line
+	8400 2250 3050 2250
+Wire Wire Line
+	3050 2250 3050 2800
+Wire Wire Line
+	5050 3500 5050 3600
+Wire Wire Line
+	5050 3600 6300 3600
+Wire Wire Line
+	6300 3600 6300 2500
+Wire Wire Line
+	7150 2650 8200 2650
+Connection ~ 7150 2650
+Connection ~ 8200 2650
+Wire Wire Line
+	8200 2650 8200 2800
+Wire Wire Line
+	6300 2500 7250 2500
+Wire Wire Line
+	7250 2500 7250 2800
 $EndSCHEMATC
