@@ -81,7 +81,8 @@ Using this scheme, the full range of ROM and RAM is available, as well as 8 outp
 ## Attaching IO 
 
 With a total of 8 output lines and 8 input lines (each with 10K pullups), basically any kind of serial IO protocol can be implemented
-by the CPU: SPI, I2C, UART
+by the CPU: SPI, I2C, UART.
+
 To keep things simple, the ByteBoard does not directly support any kind of IO interrupt line. Therefore basically only IO 
 schemes are possible where the CPU is the master of the timing. This is already an inherent characteristic of the I2C and SPI
 bus. To implement reliable UART communication, the connected device must support hardware flow control (RTS/CTS), so the CPU
