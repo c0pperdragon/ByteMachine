@@ -391,27 +391,9 @@ Wire Wire Line
 Wire Wire Line
 	5050 2750 5050 2800
 Wire Wire Line
-	5050 2750 5550 2750
-Wire Wire Line
 	5550 2800 5550 2750
-Connection ~ 5550 2750
-Wire Wire Line
-	5550 2750 5650 2750
-Wire Wire Line
-	5650 2800 5650 2750
-Connection ~ 5650 2750
-Wire Wire Line
-	5650 2750 5750 2750
-Wire Wire Line
-	5750 2800 5750 2750
-Connection ~ 5750 2750
-Wire Wire Line
-	5750 2750 5850 2750
 Wire Wire Line
 	5850 2800 5850 2750
-Connection ~ 5850 2750
-Wire Wire Line
-	5850 2750 5950 2750
 Wire Wire Line
 	5950 2800 5950 2750
 Connection ~ 5950 2750
@@ -566,7 +548,7 @@ U 1 1 5EF3F1D0
 P 6550 3150
 F 0 "U3" H 6650 3150 50  0000 R CNN
 F 1 "74AC00" V 6550 2900 50  0000 R CNN
-F 2 "" H 6550 3150 50  0001 C CNN
+F 2 "Package_DIP:DIP-14_W7.62mm_Socket" H 6550 3150 50  0001 C CNN
 F 3 "" H 6550 3150 50  0001 C CNN
 	1    6550 3150
 	0    -1   -1   0   
@@ -657,4 +639,22 @@ Wire Wire Line
 	6300 2500 7250 2500
 Wire Wire Line
 	7250 2500 7250 2800
+Wire Wire Line
+	5650 2750 5750 2750
+Wire Wire Line
+	5850 2750 5950 2750
+Wire Wire Line
+	5750 2750 5850 2750
+Connection ~ 5850 2750
+Wire Wire Line
+	5750 2800 5750 2750
+Connection ~ 5750 2750
+Wire Wire Line
+	5650 2800 5650 2750
+Connection ~ 5650 2750
+Wire Wire Line
+	5550 2750 5650 2750
+Wire Wire Line
+	5050 2750 5550 2750
+Connection ~ 5550 2750
 $EndSCHEMATC
