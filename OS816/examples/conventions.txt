@@ -1,0 +1,24 @@
+Summary of calling conventions, when using memory model "medium":
+
+Large code
+Data & stack <= 64K
+
+Emulation off, M/A 16 bit, X/Y 16 bit
+Function calls with 24 bit addressing
+
+Registers A,B,C,X,Y can be freely modified
+Direct register D is conserved
+Operands are passed as 16 bit values (*) on stack
+Called function removes operands from stack before returning (super ugly code!)
+Return value is returned in A as 16 bit. 
+32 bit return values are return in A (low bits) and in X (high bits)
+
+General code generation is based on 16 bit quantities throughout. 
+Accessing bytes or computations with 8 bit precision cause extra overhead.
+
+
+
+(*) Changes in memory model "large":
+
+Pointers are passed as 24 bit values on stack
+Returned pointers in A and X (top 8 bits).
