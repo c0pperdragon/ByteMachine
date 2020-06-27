@@ -25,9 +25,9 @@ void main()
 {
     while(!zeroinit)
     {
-		byte p;
+		byte p = portin();
         animpointer = (animpointer+1) % 16;
-        p = pattern[animpointer];
+        p = p & pattern[animpointer];
         portout_indirect(&p);
         sleep(speed);  
     }
