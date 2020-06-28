@@ -1,0 +1,44 @@
+; Small test program to use various aspects of the ByteMachine with a Z84C00 CPU.
+; It is small enough so that I do not even use an assembler.
+; The program tries to use different parts of the ROM and different parts of the RAM for
+; read and write.
+; It also accesses the input and the output port to check if all bits are working.
+; The output LEDs will play an animation which should look familiar to anyone who knows the 
+; 80ths TV show "Knight Rider".
+
+0000 3E 00          LD A,0         ; initialize counter
+0002 32 00 80       LD (8000h),A
+0005 3E 7F          LD A,7Fh       ; initialize high byte of pointer
+0007 32 01 80       LD (8001h),A  
+
+                loop:     
+000A 3A 00 80       LD A,(8000h)   ; read counter from low RAM
+000D 3C             INC A          ; increment up to 15
+000E E6 0F          AND A,0Fh
+0010 32 00 80       LD (8000h),A   ; write incremented counter to low RAM
+
+0013 2A 00 80       LD HL,(8000h)  ; fetch address of pattern into HL
+0016 7E             LD A,(HL)      ; fetch output pattern from high ROM
+0017 32 FF FF       LD (FFFFh),A   ; write to high RAM
+001A 3A FF FF       LD A,(FFFFh)   ; read back from high RAM
+
+001D 32 00 00       LD (0000h),A   ; write pattern to output port (switches to IO mode)
+0020 47             LD B,A         ; keep output pattern
+0021 3A 00 80       LD A,(8000h)   ; read input port 
+0024 A0             AND B          ; modify output pattern
+0025 32 00 00       LD (0000h),A   ; write modified pattern to output port
+0028 32 FF FF       LD (FFFFh),A   ; dummy write to RAM to switch back to normal mode
+
+002B 3E 01          LD A,1         ; waiting loop
+002D 0E 00      w0: LD C,0  
+002F 06 00      w1: LD B,0
+0031 04         w2: INC B
+0032 C2 31 00       JP NZ,w2
+0035 0C             INC C
+0036 C2 2F 00       JP NZ,w1
+0039 3D             DEC A 
+003A C2 2D 00       JP NZ,w0
+
+003D C3 0A 00       JMP loop
+           
+7F00 80 C0 60 30 18 0C 06 03 01 03 06 0C 18 30 60 C0  ; pattern sequence     
