@@ -8,7 +8,7 @@ drive the interface. With this circuit it is possible to directly access 32K of 
 Because only the minium number of wires is used, there is no distinction between memory access and IO 
 accesses - so both will just go to the general address space of the ByteMachine. 
 
-![alt text](breadboard.jpg "Breadboard before connecting to the main board")
+![alt text](assembly.jpg "Breadboard with Z80 connected to the main board")
 
 
 ## Memory map
