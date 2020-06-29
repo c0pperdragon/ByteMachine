@@ -18,8 +18,9 @@ and rudimentary IO. You then need to add a relatively small circuit for the CPU 
 be easily done with a single breadboard and a series of jumper links connecting this with the main board. In my experients this creates a 
 pretty reliable setup which is even able to use clock frequencies of up to 16Mhz (for the 65Cxx types of CPUs).
 Currently I have built and tested setups for the following CPUs:
-* 65C02
-* 65C816
+* [65C02](65c02)
+* [65C816](65c816)
+* [Z84C00](z84c00)
 
 ![alt text](testassembly.jpg "ByteMachine running with a 65C02")
 
