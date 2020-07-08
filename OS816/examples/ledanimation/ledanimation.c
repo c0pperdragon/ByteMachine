@@ -10,7 +10,7 @@ const byte pattern[] =   // constant data (KDATA)
 };
 
 // static data with initialization (DATA)
-word speed = 1200;   // 100 ms at 12 MHz
+word speed = 100; 
 word animpointer = 8;   
 
 // UDATA segment (should initially be zeroed out)
