@@ -50,7 +50,8 @@ SKIP:
 DONE: 
 
 ;    ; set the output port to a defined state
-    PEA	#$00FF
+    LDA #$00FF
+    PHA
     JSL	>~~portset
 
     ; start the main function, and stop CPU upon return

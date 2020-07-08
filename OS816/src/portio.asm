@@ -16,20 +16,20 @@ outportdata:
     SEP #$30 ;8 bit registers
     longa off
 
-    DB $a3,4  ; LDA SP+4
+    LDA <4,S
     EOR #$00                ; only necessary to make execution time equal to portclear
-    ORA >outportdata        ; set more bits
+    ORA |outportdata        ; set more bits
     STA >$800000            ; send to port and temporarily switch to IO mode
-    STA >outportdata        ; keep value and switch back to normal mode
+    STA |outportdata        ; keep value and switch back to normal mode
 
     REP #$30 ;16 bit registers
     longa on
 
     ; take down stack and return
-    DB $a3,2  ; LDA SP+2
-    DB $83,4  ; STA SP+4
+    LDA <2,S
+    STA <4,S
     PLA 
-    DB $83,1  ; STA SP+1
+    STA <1,S
     RTL
     ENDS
 
@@ -45,20 +45,20 @@ outportdata:
     SEP #$30 ;8 bit registers
     longa off
 
-    DB $a3,4  ; LDA SP+4
+    LDA <4,S
     EOR #$FF 
-    AND >outportdata
+    AND |outportdata
     STA >$800000            ; send to port and temporarily switch to IO mode
-    STA >outportdata        ; keep value and switch back to normal mode
+    STA |outportdata        ; keep value and switch back to normal mode
 
     REP #$30 ;16 bit registers
     longa on
 
     ; take down stack and return
-    DB $a3,2  ; LDA SP+2
-    DB $83,4  ; STA SP+4
+    LDA <2,S
+    STA <4,S
     PLA 
-    DB $83,1  ; STA SP+1
+    STA <1,S
     RTL
     ENDS
 
@@ -73,15 +73,16 @@ outportdata:
     SEP #$30 ;8 bit registers
     longa off
 
-    LDA >outportdata        ; get current output pattern
+    LDA |outportdata        ; get current output pattern
     STA >$800000            ; switch to IO mode without disturbing the output signal
-    DB $a3,1  ; LDA SP+1    ; any read from RAM now reads from input port instead
+    LDA <1,S                ; any read from RAM now reads from input port instead
     PHA                     ; writing to RAM turns off IO mode 
     PLA                     ;
 
     REP #$30 ;16 bit registers
     longa on
 
+    AND #$00FF               ; clear higher bits
     RTL
     ENDS
 

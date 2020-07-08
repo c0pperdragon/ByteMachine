@@ -8,7 +8,7 @@ void portset(byte bits);
 void portclear(byte bits);
 byte portin(void); 
 
-byte uartsend(byte* data, word length);
+void uartsend(byte data);
 
 void sleep(word milliseconds);
 
