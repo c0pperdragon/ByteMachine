@@ -13,19 +13,20 @@ const byte pattern[] =   // constant data (KDATA)
 word speed = 1200;   // 100 ms at 12 MHz
 word animpointer = 8;   
 
-// UDATA segment (should still be zeroed out)
+// UDATA segment (should initially be zeroed out)
 byte zeroinit;  
 
 void portout_indirect(byte* p)
 {
-    portout(*p);
+    portclear((byte)0xff);
+    portset(*p);
 }
 
 void main()
 {
     while(!zeroinit)
     {
-		byte p = portin();
+        byte p = portin();
         animpointer = (animpointer+1) % 16;
         p = p & pattern[animpointer];
         portout_indirect(&p);

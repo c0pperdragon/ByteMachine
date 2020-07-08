@@ -22,6 +22,6 @@ possible otherwise.
 with 16 bit integers is the default and most optimized option. Using 8-bit values for
 local variables or parameters instead only degrades performance. 
 
-* Function calls have a pretty high overhead, so maybe if makes sense to inline 
+* Function calls have a pretty high overhead, so maybe it makes sense to inline 
 certain things using macros.
 

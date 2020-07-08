@@ -6,7 +6,7 @@
     XREF _BEG_UDATA
     XREF _END_UDATA
     XREF ~~main
-    XREF ~~portout
+    XREF ~~portset
 
     CODE
 START:
@@ -23,9 +23,9 @@ START:
     LDA #$FFFF 
     TCS 
 
-    ; the DATA and UDATA segments must reside in the same bank for faster
+    ; the DATA and UDATA segments must reside in the same bank for 
     ; direct access. The DBR will always contain the number of this bank.
-    ; The second block copy instruction below have the side effect of also setting
+    ; The second block copy instruction below has the side effect of also setting
     ; the DBR.
 
     ; copy initial content into DATA segment 
@@ -34,7 +34,7 @@ START:
     DEC A ;less one for MVN instruction
     LDX #<_ROM_BEG_DATA ;get source into X
     LDY #<_BEG_DATA ;get dest into Y
-    MVN #^_ROM_BEG_DATA,#^_BEG_DATA ;copy bytes
+    MVN #(^_ROM_BEG_DATA)+$80,#^_BEG_DATA ;copy bytes
 SKIP:
 
     ; clear UDATA segment
@@ -49,9 +49,9 @@ SKIP:
     MVN #^_BEG_UDATA,#^_BEG_UDATA ;zero out bytes with this overlapping block copy
 DONE: 
 
-    ; set the output port to a defined state
-    PEA	#<$0000
-    JSL	>~~portout
+;    ; set the output port to a defined state
+    PEA	#$00FF
+    JSL	>~~portset
 
     ; start the main function, and stop CPU upon return
     JSL >~~main
@@ -69,7 +69,7 @@ DONE:
     ; get the code running from the true ROM address.
     ; If interrupt vectors need to be installed also, this must be done
     ; in RAM, because in native mode the whole of bank 0 is use for RAM
-RESET SECTION   ; locate at 80FFF8 (FFF8 in ROM) by the linker
+RESET SECTION   ; must locate at 80FFF8 (FFF8 in ROM) by the linker
     JMP >START   ; long jump to the startup code (4 byte instruction)
     DW $FFF8     ; reset vector is relative to bank 0
     ENDS
