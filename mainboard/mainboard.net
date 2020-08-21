@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source C:\Users\Reinhard\Documents\GitHub\ByteMachine\mainboard\mainboard.sch)
-    (date "21.08.2020 21:08:22")
+    (date "21.08.2020 22:06:46")
     (tool "Eeschema (5.0.0)")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -24,7 +24,7 @@
       (tstamp 5ECA766A))
     (comp (ref U5)
       (value SST39SF040)
-      (footprint Package_DIP:DIP-32_W15.24mm_Socket)
+      (footprint ProjectFootprints:DIP-32_LargeHoles)
       (datasheet http://download.intel.com/design/archives/flash/docs/29045101.pdf)
       (libsource (lib parts) (part SST39SF040) (description "PA28F400BX-T/B Flash EEProm 4-MBIT (256Kx16bits, 512Kx8bits) 5V, 12V Prog"))
       (sheetpath (names /) (tstamps /))

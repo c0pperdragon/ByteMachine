@@ -7,7 +7,7 @@ encoding utf-8
 Sheet 1 1
 Title "Byte machine - main board"
 Date ""
-Rev "1.0"
+Rev "2"
 Comp ""
 Comment1 ""
 Comment2 ""
@@ -31,7 +31,7 @@ U 1 1 5ECA772E
 P 4850 4600
 F 0 "U5" H 4850 6067 50  0000 C CNN
 F 1 "SST39SF040" H 4850 5976 50  0000 C CNN
-F 2 "Package_DIP:DIP-32_W15.24mm_Socket" H 4900 4100 50  0001 L CNN
+F 2 "ProjectFootprints:DIP-32_LargeHoles" H 4900 4100 50  0001 L CNN
 F 3 "http://download.intel.com/design/archives/flash/docs/29045101.pdf" H 4850 4850 50  0001 C CNN
 	1    4850 4600
 	1    0    0    -1  
