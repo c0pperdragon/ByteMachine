@@ -26,13 +26,12 @@ access the RAM and the higher 32K of address space will address the ROM.
 
 ## Memory map
 
-The 64K address space which the 65C02 can access using its 16 address lines are translated to the address spaces of the ByteMachine
-in the following way:
+The 64K address space which the 65C02 can access using its 16 address lines are translated to the address spaces of the ByteMachine in the following way:
 
 | CPU address| type | mem address  |
 | ---------- | ---- | ------------ |
-| 0000..7FFF | RAM  | 78000..7FFFF | 
-| 8000..FFFF | ROM  | 78000..7FFFF | 
+| 0000..7FFF | RAM  | 68000..6FFFF | 
+| 8000..FFFF | ROM  | 68000..6FFFF | 
 
 I intentionally use just this portion of the ROM so other areas can be used for different CPU boards without the
 need to overwrite this area.

@@ -390,13 +390,6 @@ Connection ~ 6450 3800
 Wire Wire Line
 	6450 3800 7050 3800
 Wire Wire Line
-	6150 3800 6250 3800
-Connection ~ 6250 3800
-Wire Wire Line
-	6250 3800 6350 3800
-Wire Wire Line
-	6250 3800 6250 4500
-Wire Wire Line
 	6250 3900 6450 3900
 Wire Wire Line
 	6450 3800 6450 4500
@@ -485,4 +478,9 @@ Connection ~ 7050 2500
 Wire Wire Line
 	7050 2500 7300 2500
 NoConn ~ 7150 2550
+Connection ~ 6250 3900
+Wire Wire Line
+	6250 3900 6250 4500
+Wire Wire Line
+	6150 3800 6350 3800
 $EndSCHEMATC
