@@ -1,6 +1,6 @@
 # 65c02
 
-The 6502 is one of the best known 8-bit processors as various variants if it were used in many 8-bit computers of the 80th.
+The 6502 is one of the best known 8-bit processors as various variants of it were used in many 8-bit computers of the 80th.
 Apple, Commodore, Atari, Acorn and many other manufacturers used this CPUs to drive their products.
 Genuine old parts may probably be difficult to get, but luckily there is a not-so-modern variant that is still in production: WD65c02.
 
@@ -21,8 +21,6 @@ The main board on the other hand expects explicit RD and WR pulses for each acce
 (it generates the clock, but does not use it itself in any way). To produce the correct WR and RD pulses, the CPU board 
 needs 3 NAND-gates to join together the clock and the RWB line to create the necessary half-cycle long negative-going pulses.
 
-The 4th NAND-gate on the IC is used to invert the address line A15 to produce the RAM signal. So the lower 32K of the address space
-access the RAM and the higher 32K of address space will address the ROM.
 
 ## Memory map
 

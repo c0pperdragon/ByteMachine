@@ -29,7 +29,7 @@ After reset (in "emulation mode"), the CPU is reading the reset vector from bank
 But in normal operation it would be beneficial to have the whole bank 0 available for RAM.
 Therefore the board uses the "emulation" output pin to provide two different memory mappings. One solely for 
 the purpose of bringing the CPU up into native mode. In this emulation mode, all addresses only  map
-to the ROM and not much meaningful work can be done (expect switching to native mode).
+to the ROM and not much meaningful work can be done (except switching to native mode).
 
 Memory map
 
