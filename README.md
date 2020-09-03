@@ -21,6 +21,7 @@ Currently I have built and tested setups for the following CPUs:
 * [65C02](65c02)
 * [65C816](65c816)
 * [Z84C00](z84c00)
+* [i8088](i8088)
 
 ![alt text](testassembly.jpg "ByteMachine running with a 65C02")
 
