@@ -4,6 +4,8 @@ The Intel 8088 was the processor that powered the original IBM PC and XT. While 
 architecture identical to the 8086, it was stripped down to access the bus only with 8 data bits.
 As it also can access a total address range of exactly 1 megabyte this now is the perfect match for the ByteMachine.
 
+![alt text](breadboard.jpg "Breadboard before connecting to the main board")
+
 ## Control signals
 
 To keep the pin count down to 40, the processor multiplexes many address lines with other signals. Therefore 
