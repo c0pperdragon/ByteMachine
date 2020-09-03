@@ -1,0 +1,45 @@
+; Small test program to use various aspects of the ByteMachine with an Intel 8088 CPU.
+; It is small enough so that I do not even use an assembler.
+; The program tries to use different parts of the ROM and different parts of the RAM for read and write.
+; It also accesses the input and the output port to check if all bits are working.
+; The output LEDs will play an animation which should look familiar to anyone who knows the 
+; 80ths TV show "Knight Rider".
+
+; segment layout:  
+;    code segment:   FFF00   (ROM)
+;    data segment:   00000   (RAM)
+
+; bit patterns 
+FFF00 80 C0 60 30 18 0C 06 03 01 03 06 0C 18 30 60 C0
+
+; program
+                      start:
+FFF10 B8 00 00          MOV AX,0000h   ; set up data segment 
+FFF13 8E D8             MOV DS,AX
+FFF15 B0 00             MOV AL,0       ; initialize counter
+FFF17 A2 00 00          MOV [0],AL 
+
+                      loop: 
+FFF1A A0 00 00          MOV AL,[0]
+FFF1D 04 01             ADD AL,1
+FFF1F 24 0F             AND AL,0Fh
+FFF21 A2 00 00          MOV [0],AL
+                        
+FFF24 B4 00             MOV AH,0
+FFF26 89 C6             MOV SI,AX       ; fetch data from ROM
+FFF28 2E 8A 04          MOV AL,CS:[SI]
+
+FFF2B 2E A2 2A 00       MOV CS:[42],AL  ; writing to ROM will switch to IO mode
+FFF2F 22 06 2A 00       AND AL,[42]     ; reading from RAM will instead read from IO
+FFF33 2E A2 2A 00       MOV CS:[42],AL  ; write again to ROM with updated pattern
+FFF37 A2 01 00          MOV [1],AL      ; dummy write to RAM will switch back to RAM mode
+
+FFF3A B8 00 70          MOV AX,7000h
+                      delay: 
+FFF3D 83 E8 01          SUB AX,1
+FFF40 75 FB             JNZ delay
+FFF42 EA 1A 00 F0 FF    JMP loop
+
+; reset start location
+FFFF0 EA 10 00 F0 FF    JMP start      ; set code segment start to FFF00
+                    

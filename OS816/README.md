@@ -1,9 +1,9 @@
 # OS816
 
 A tiny operating system (in fact just some startup code and a few libraries) 
-to work on the ByteMachine with a 65C816 CPU.
+to work on the ByteMachine with a 65C816 CPU running at 12Mhz (various timings depend on this).
 This project also provides some examples (starting with the most basic LED animation) 
-to use these libraries and actually get the tool-chain to work.
+to use these libraries and actually get the tool chain to work.
 
 ## Compiling for the platform
 
