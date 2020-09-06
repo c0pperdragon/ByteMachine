@@ -87,8 +87,8 @@ by the CPU: SPI, I2C, UART.
 
 To keep things simple, the ByteBoard does not directly support any kind of IO interrupt line. Therefore basically only IO 
 schemes are possible where the CPU is the master of the timing. This is already an inherent characteristic of the I2C and SPI
-bus. To implement reliable UART communication, the connected device must support hardware flow control (RTS/CTS), so the CPU
-needs only to listen for data when it is itself prepared for that.
+bus. To implement reliable UART communication, the connected device must support hardware flow control (RTS/CTS) at least 
+on the incomming signal, so the CPU needs only to listen for data when it is itself prepared for that.
 
 ## Bidirectional lines for I2C 
 
