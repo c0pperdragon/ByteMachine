@@ -331,13 +331,13 @@ Wire Wire Line
 	1850 4250 1950 4250
 Text Label 1750 3100 0    50   ~ 0
 MISO
-Text Label 1750 3300 0    50   ~ 0
+Text Label 1750 3400 0    50   ~ 0
 RX2
 Wire Wire Line
 	1850 4350 1950 4350
 Text Label 6100 2100 0    50   ~ 0
 RTS
-Text Label 6100 1700 0    50   ~ 0
+Text Label 6100 2600 0    50   ~ 0
 RX2
 Wire Wire Line
 	5350 1200 5350 1150
@@ -345,7 +345,6 @@ Wire Wire Line
 	5350 3100 5350 3050
 NoConn ~ 5950 2400
 NoConn ~ 5950 2500
-NoConn ~ 5950 2600
 Wire Wire Line
 	5950 2100 6100 2100
 NoConn ~ 5950 1600
@@ -524,10 +523,6 @@ Wire Wire Line
 Wire Wire Line
 	6200 1500 6200 1300
 Wire Wire Line
-	1650 3300 1700 3300
-Wire Wire Line
-	5950 1700 6100 1700
-Wire Wire Line
 	5950 1900 6600 1900
 NoConn ~ 5950 2200
 Wire Wire Line
@@ -557,13 +552,6 @@ NoConn ~ 8450 4900
 NoConn ~ 8450 4800
 NoConn ~ 8450 4600
 NoConn ~ 8450 4500
-Wire Wire Line
-	1650 3400 1700 3400
-Wire Wire Line
-	1700 3400 1700 3300
-Connection ~ 1700 3300
-Wire Wire Line
-	1700 3300 1750 3300
 $Comp
 L power:+5V #PWR?
 U 1 1 5F5506EE
@@ -579,4 +567,10 @@ Wire Wire Line
 	1650 3100 1750 3100
 Wire Wire Line
 	1650 3200 1900 3200
+NoConn ~ 1650 3300
+Wire Wire Line
+	1650 3400 1750 3400
+Wire Wire Line
+	5950 2600 6100 2600
+NoConn ~ 5950 1700
 $EndSCHEMATC
