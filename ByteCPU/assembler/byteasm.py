@@ -31,30 +31,47 @@ def tokenize(line):
         else:
             tokens.append(token)
     return tokens
-    
-def evaluate(identifiers, s):
-    if s in identifiers:
-        return identifiers[s]
-    elif len(s)>0 and s[0]=='.': 
-        return evaluate(identifiers, s[1:]) & 0xff
-    elif len(s)>0 and s[0]=='^': 
-        return (evaluate(identifiers, s[1:]) >> 8) & 0xff
-    elif len(s)>0 and s[0]=='$':
-        return int(s[1:], 16)
-    else:
-        return int(s,10)
 
-def op(identifiers, tokens, generate, tidx, bitpos, bitlen):
+def evaluate(identifiers, s):
+    try:
+        if s in identifiers:
+            return identifiers[s]
+        elif len(s)>0 and s[0]=='.': 
+            return evaluate(identifiers, s[1:]) & 0xff
+        elif len(s)>0 and s[0]=='^': 
+            return (evaluate(identifiers, s[1:]) >> 8) & 0xff
+        elif len(s)>0 and s[0]=='$':
+            return int(s[1:],16)
+        else:
+            return int(s,10)
+    except ValueError as e:
+        raise AssemblerException("Can not parse number "+s)
+
+def reg(tokens, tidx, bitpos):
     if tidx >= len(tokens):
-        raise AssemblerException("Missing parameter")
+        raise AssemblerException("Missing register specifier")
+    if tokens[tidx]=="R0":
+        return 0 << bitpos;
+    elif tokens[tidx]=="R1":
+        return 1 << bitpos;
+    elif tokens[tidx]=="R2":
+        return 2 << bitpos;
+    elif tokens[tidx]=="R3":
+        return 3 << bitpos
+    else:
+        raise AssemblerException("Invalid register name");
+
+def op(identifiers, generate, tokens, tidx, bitlen):
+    if tidx >= len(tokens):
+        raise AssemblerException("Missing operand")
     elif not generate:
         return 0
     else:
         value = evaluate(identifiers, tokens[tidx])
-        if value<0 or value >= (1<<bitlen):
-            raise AssemblerException("Parameter exceeds range "+str(1<<bitlen))
+        if value<0 or value>=(1<<bitlen):
+            raise AssemblerException("Operand exceeds range")
         else:
-            return value << bitpos
+            return value
 
 def printlisting(startaddress, bytes, line):
     perpart = 4
@@ -63,18 +80,18 @@ def printlisting(startaddress, bytes, line):
         x = [ "{:04x} ".format(startaddress+i*perpart) ]
         for j in range(perpart):
             if i*perpart+j < len(bytes):
-                x.append("{:02x}".format(bytes[i*perpart+j]) )
+                x.append("{:02x} ".format(bytes[i*perpart+j]) )
             else:
-                x.append("  ");
+                x.append("   ");
         if i==0:
-            x.append("  ")
+            x.append(" ")
             x.append(line)
         print ("".join(x))
 
-def processline(identifiers, tokens, generate, codeaddress):
+def processline(identifiers, generate, tokens, codeaddress):
     I = identifiers
-    T = tokens
     G = generate
+    T = tokens
     bytes = []
     if len(tokens)==0:
         pass
@@ -88,58 +105,54 @@ def processline(identifiers, tokens, generate, codeaddress):
     elif len(tokens)==3 and tokens[1]=='=':
         if not generate:
             id = tokens[0]
-            value = op(I,T,G, 2, 0,16);
+            value = op(I,G,T, 2, 16);
             if id in identifiers:
                 raise AssemblerException("May not redefine '"+id+"'")#
             else:
                 identifiers[id] = value
     elif len(tokens)==2 and tokens[0]=="ORG":
-        codeaddress[0] = op(I,T,G, 1, 0,16)
+        codeaddress[0] = op(I,G,T, 1, 16)
     elif tokens[0]=="BYTE":
         for idx in range(1,len(tokens)):
-            bytes.append(op(I,T,G, idx, 0,8))
-    elif tokens[0]=="MOVE":
-        bytes = [ 0x00 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
+            bytes.append(op(I,G,T, idx, 8))
     elif tokens[0]=="ST":
-        bytes = [ 0x10 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
+        bytes = [ 0x00 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="LD":
-        bytes = [ 0x20 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
+        bytes = [ 0x10 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="SET":
-        bytes = [ 0x30 | op(I,T,G, 1, 0,2) , op(I,T,G, 2, 0,8) ]
+        bytes = [ 0x20 | reg(T, 1, 0) , op(I,G,T, 2, 8) ]
     elif tokens[0]=="DP":
-        bytes = [ 0x40 | op(I,T,G, 1, 2,2) ]
+        bytes = [ 0x30 | reg(T, 1, 2) ]
     elif tokens[0]=="JMP":
-        bytes = [ 0x50 | op(I,T,G, 1, 0,2) , op(I,T,G, 2, 0,8) ]
-    elif tokens[0]=="RET":
-        bytes = [ 0x60 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
-    elif tokens[0]=="BNZ":
-        bytes = [ 0x70 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 0,8) ]
-    elif tokens[0]=="BR":
-        bytes = [ 0x71 | op(I,T,G, 1, 0,8) ]
-    elif tokens[0]=="BZ":
-        bytes = [ 0x72 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 0,8) ]
+        bytes = [ 0x40 | reg(T, 1, 0) , op(T, 2, 2) ]
+    elif tokens[0]=="BGE":
+        bytes = [ 0x70 | reg(T, 1, 0) | reg(T, 2, 2) , op(I,G,T, 3, 8) ]
+    elif tokens[0]=="BLE":
+        bytes = [ 0x70 | reg(T, 1, 2) | reg(T, 2, 0) , op(I,G,T, 3, 8) ]
+    elif tokens[0]=="BRA":
+        bytes = [ 0x70 , op(I,G,T, 1, 8) ]
     elif tokens[0]=="ADD":
-        bytes = [ 0x80 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
+        bytes = [ 0x80 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="SUB":
-        bytes = [ 0x90 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
+        bytes = [ 0x90 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="MUL":
-        bytes = [ 0xA0 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
+        bytes = [ 0xA0 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="DIV":
-        bytes = [ 0xB0 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
+        bytes = [ 0xB0 | reg(T, 1, 0) | reg(T, 2, 2)]
     elif tokens[0]=="AND":
-        bytes = [ 0xC0 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
+        bytes = [ 0xC0 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="OR":
-        bytes = [ 0xD0 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
+        bytes = [ 0xD0 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="XOR":
-        bytes = [ 0xE0 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
-    elif tokens[0]=="CMP":
-        bytes = [ 0xF0 | op(I,T,G, 1, 0,2) | op(I,T,G, 2, 2,2) ]
-    else:        
+        bytes = [ 0xE0 | reg(T, 1, 0) | reg(T, 2, 2) ]
+    elif tokens[0]=="LT":
+        bytes = [ 0xF0 | reg(T, 1, 0) | reg(T, 2, 2) ]
+    else:
         raise AssemblerException("Unknown instruction "+tokens[0])     
 
     codeaddress[0] += len(bytes)
-    return bytes        
-                
+    return bytes
+
 def process(identifiers, sourcefile, outbuffer):
     generate = bool(outbuffer)
     src = open(sourcefile, "r")
@@ -151,14 +164,14 @@ def process(identifiers, sourcefile, outbuffer):
         try:
             tokens = tokenize(line)
             startaddress = codeaddress[0]
-            bytes = processline(identifiers, tokens, generate, codeaddress)
+            bytes = processline(identifiers, generate, tokens, codeaddress)
             if generate:
                 printlisting(startaddress, bytes, line)
                 outbuffer[startaddress:startaddress+len(bytes)] = bytes
         except AssemblerException as e:
             print(sourcefile+":"+str(linenumber)+" "+str(e),file=sys.stderr)
             numerrors += 1
-        linenumber += linenumber
+        linenumber += 1
     src.close()
     if numerrors>0:
         raise AssemblerException("Encountered "+str(numerrors)+" errors")
@@ -192,7 +205,7 @@ def printhexfile(hexfile, buffer):
         
 def asm(sourcefile,hexfile):
     try:
-        identifiers = { "A": 0, "B": 1, "C": 2, "D": 3 }
+        identifiers = { }
         process(identifiers, sourcefile, None)
         rom = [None]*65536
         process(identifiers, sourcefile, rom)
@@ -204,4 +217,3 @@ if len(sys.argv)>=2:
     asm(sys.argv[1]+".asm",sys.argv[1]+".hex")
 else:
     print("No filename given to assemble",file=sys.stderr)
-    

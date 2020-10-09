@@ -10,57 +10,54 @@ DUMMY = $8001
     ORG $0000     
 MAIN:
     ; init memory location COUNTER with 0
-    SET A ^RAM
-    DP A                
-    SET A .COUNTER
-    SET B 0
-    ST A B
+    SET R0 ^RAM
+    DP R0                
+    SET R0 .COUNTER
+    SET R1 0
+    ST R1 R0
     
 LOOP:
     ; increment COUNTER up to 15 and then wrap back to 0
-    SET A .COUNTER
-    MOVE C A
-    LD C C
-    SET B 1
-    ADD C B
-    SET B 15
-    AND C B
-    ST A C    
+    SET R0 .COUNTER
+    LD R2 R0
+    SET R1 1
+    ADD R2 R1
+    SET R1 15
+    AND R2 R1
+    ST R2 R0    
     
     ; fetch pattern from ROM
-    SET D ^PATTERN
-    DP D
-    SET B .PATTERN
-    ADD C B 
-    LD C C
+    SET R3 ^PATTERN
+    DP R3
+    SET R1 .PATTERN
+    LD R2 R1
     
     ; write pattern to ROM range to hit the output port 
-    ST C C
+    ST R2 R1
     
     ; switch back to RAM address and RAM mode also
-    SET A ^RAM
-    DP A
-    SET B .DUMMY
-    ST B A
+    SET R0 ^RAM
+    DP R0
+    SET R1 .DUMMY
+    ST R0 R1
     
     ; delay loop
-    SET D 1
-    SET A 10
+    SET R3 1
+    SET R0 60
 L1:
-    SET B 255
+    SET R1 100
 L2:
-    SET C 255
+    SET R2 100
 L3 :
-    SUB C D
-    BNZ C .L3
-    SUB B D
-    BNZ B .L2
-    SUB A D
-    BNZ A .L1
+    SUB R2 R3
+    BGE R2 R3 .L3
+    SUB R1 R3
+    BGE R1 R3 .L2
+    SUB R0 R3
+    BGE R0 R3 .L1
     
     ; start over
-    SET A ^LOOP
-    JMP A .LOOP
+    BRA .LOOP
     
     ORG $0100
 PATTERN:
