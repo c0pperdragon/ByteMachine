@@ -349,17 +349,6 @@ Connection ~ 4300 5200
 Wire Wire Line
 	4300 5200 2650 5200
 $Comp
-L 74xx:74LS32 U2
-U 2 1 602800E1
-P 10300 4150
-F 0 "U2" H 10300 4475 50  0000 C CNN
-F 1 "74HC32" H 10300 4384 50  0000 C CNN
-F 2 "" H 10300 4150 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS32" H 10300 4150 50  0001 C CNN
-	2    10300 4150
-	1    0    0    -1  
-$EndComp
-$Comp
 L 74xx:74HC00 U1
 U 2 1 60280158
 P 750 4900
@@ -523,17 +512,6 @@ F 3 "http://www.ti.com/lit/gpn/sn74LS08" H 5250 2900 50  0001 C CNN
 	3    5250 2900
 	1    0    0    -1  
 $EndComp
-$Comp
-L 74xx:74LS08 U3
-U 4 1 6031320F
-P 10300 5300
-F 0 "U3" H 10300 5500 50  0000 C CNN
-F 1 "74HC08" H 10550 5450 50  0000 C CNN
-F 2 "" H 10300 5300 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS08" H 10300 5300 50  0001 C CNN
-	4    10300 5300
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	5550 2900 6450 2900
 Wire Wire Line
@@ -599,12 +577,12 @@ Wire Wire Line
 $Comp
 L 74xx:74LS32 U2
 U 3 1 603435D4
-P 7500 1850
-F 0 "U2" H 7500 2175 50  0000 C CNN
-F 1 "74HC32" H 7500 2084 50  0000 C CNN
-F 2 "" H 7500 1850 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS32" H 7500 1850 50  0001 C CNN
-	3    7500 1850
+P 7500 2350
+F 0 "U2" H 7500 2650 50  0000 C CNN
+F 1 "74HC32" H 7500 2550 50  0000 C CNN
+F 2 "" H 7500 2350 50  0001 C CNN
+F 3 "http://www.ti.com/lit/gpn/sn74LS32" H 7500 2350 50  0001 C CNN
+	3    7500 2350
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -617,17 +595,6 @@ F 2 "" H 1150 4900 50  0001 C CNN
 F 3 "http://www.ti.com/lit/gpn/sn74hc00" H 1150 4900 50  0001 C CNN
 	3    1150 4900
 	0    -1   -1   0   
-$EndComp
-$Comp
-L 74xx:74HC00 U1
-U 4 1 60354CFB
-P 10300 4750
-F 0 "U1" H 10400 4950 50  0000 R CNN
-F 1 "74HC00" H 10750 4900 50  0000 R CNN
-F 2 "" H 10300 4750 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74hc00" H 10300 4750 50  0001 C CNN
-	4    10300 4750
-	1    0    0    -1  
 $EndComp
 $Comp
 L 74xx:74HC00 U1
@@ -660,17 +627,6 @@ F 1 "74HC08" H 10880 1305 50  0000 L CNN
 F 2 "" H 10650 1350 50  0001 C CNN
 F 3 "http://www.ti.com/lit/gpn/sn74LS08" H 10650 1350 50  0001 C CNN
 	5    10650 1350
-	1    0    0    -1  
-$EndComp
-$Comp
-L 74xx:74LS32 U2
-U 4 1 603565C8
-P 7500 2350
-F 0 "U2" H 7500 2675 50  0000 C CNN
-F 1 "74HC32" H 7500 2584 50  0000 C CNN
-F 2 "" H 7500 2350 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS32" H 7500 2350 50  0001 C CNN
-	4    7500 2350
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -863,24 +819,6 @@ Wire Wire Line
 	5550 2350 5550 2450
 Wire Wire Line
 	2550 6950 2600 6950
-NoConn ~ 10600 4150
-NoConn ~ 10600 4750
-Wire Wire Line
-	9950 4850 10000 4850
-Wire Wire Line
-	9950 4850 9950 4650
-Wire Wire Line
-	9950 4650 10000 4650
-Wire Wire Line
-	9950 4650 9950 4250
-Wire Wire Line
-	9950 4250 10000 4250
-Connection ~ 9950 4650
-Wire Wire Line
-	9950 4250 9950 4050
-Wire Wire Line
-	9950 4050 10000 4050
-Connection ~ 9950 4250
 Text HLabel 1550 7550 3    50   Input ~ 0
 D0
 Text HLabel 1650 7550 3    50   Input ~ 0
@@ -958,18 +896,6 @@ Wire Wire Line
 	1150 3700 4950 3700
 Wire Wire Line
 	2250 3800 4950 3800
-$Comp
-L power:GND #PWR0206
-U 1 1 6108204C
-P 9950 5450
-F 0 "#PWR0206" H 9950 5200 50  0001 C CNN
-F 1 "GND" H 9955 5277 50  0000 C CNN
-F 2 "" H 9950 5450 50  0001 C CNN
-F 3 "" H 9950 5450 50  0001 C CNN
-	1    9950 5450
-	1    0    0    -1  
-$EndComp
-Connection ~ 9950 4850
 Text HLabel 3500 7400 3    50   Input ~ 0
 ISTRUE
 Wire Wire Line
@@ -1033,16 +959,17 @@ Wire Wire Line
 	1950 3250 4950 3250
 Wire Wire Line
 	2050 3350 4950 3350
-Wire Wire Line
-	9950 5200 10000 5200
-Wire Wire Line
-	9950 4850 9950 5200
-Wire Wire Line
-	9950 5200 9950 5400
-Wire Wire Line
-	9950 5400 10000 5400
-Connection ~ 9950 5200
-Wire Wire Line
-	9950 5400 9950 5450
-Connection ~ 9950 5400
+$Comp
+L 74xx:74LS32 U2
+U 2 1 5F9AE1AE
+P 7500 1850
+AR Path="/6088908D/5F9AE1AE" Ref="U2"  Part="2" 
+AR Path="/60888F9A/5F9AE1AE" Ref="U?"  Part="2" 
+F 0 "U2" H 7500 2150 50  0000 C CNN
+F 1 "74HC32" H 7500 2050 50  0000 C CNN
+F 2 "" H 7500 1850 50  0001 C CNN
+F 3 "http://www.ti.com/lit/gpn/sn74LS32" H 7500 1850 50  0001 C CNN
+	2    7500 1850
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
