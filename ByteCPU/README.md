@@ -2,8 +2,8 @@
 
 Implementation of my own 8-bit CPU in 7400 series logic to work together with the ByteMachine main board.
 
-[Specification](specification.md)
-[Schematics](cpuboard/cpuboard.pdf)
+* [Specification](specification.md)
+* [Schematics](cpuboard/cpuboard.pdf)
 
 ## Architecture overview
 
@@ -13,7 +13,8 @@ Instruction opcodes could then be 8 bits long, with 16 different operations and 
 
 Instructions work two phases: Opcode fetch, execution. Instructions which do access the memory
 in their execution stage will take the full 2 clock cycles. Instructions that work on internal
-registers alone can interleave their execution stage with the fetch stage of the next instruction
+registers alone and also do not mess with the instruction pointer
+can interleave their execution stage with the fetch stage of the next instruction
 to make the effective execution time one cycle only.
 
 

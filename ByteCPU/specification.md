@@ -56,7 +56,7 @@ Digits denoted with R are reserved and should be set to 0 for upward compatibili
     0011yyRR             DP yy
         Transfer content of register yy into the data page register.
 
-    0100yyxx immediate   JMP xx yy 
+    0100yyxx             JMP xx yy 
         Jump to the location specified by the register xx (low bits) and the register yy
         (high bits)
 
