@@ -520,11 +520,7 @@ F 3 "" H 4750 1850 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	1000 2100 1350 2100
-Wire Wire Line
 	3350 2100 3350 1800
-Wire Wire Line
-	1000 2200 1250 2200
 Wire Wire Line
 	3450 2200 3450 1800
 Wire Wire Line
@@ -761,22 +757,12 @@ Wire Wire Line
 Wire Wire Line
 	10450 3900 10450 3500
 Connection ~ 8100 3900
-Connection ~ 1350 2100
-Wire Wire Line
-	1350 2100 3350 2100
-Connection ~ 1250 2200
-Wire Wire Line
-	1250 2200 3450 2200
 Wire Wire Line
 	2150 5250 1000 5250
 Wire Wire Line
 	1000 5350 2250 5350
 Wire Wire Line
 	1000 5450 2350 5450
-Wire Wire Line
-	1250 2200 1250 6800
-Wire Wire Line
-	1350 2100 1350 6700
 Text Label 2150 4150 1    50   ~ 0
 R00
 Text Label 2250 4150 1    50   ~ 0
@@ -1450,10 +1436,6 @@ F 3 "http://www.ti.com/lit/gpn/sn74LS139" H 2200 6800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	1700 6800 1250 6800
-Wire Wire Line
-	1350 6700 1700 6700
-Wire Wire Line
 	2700 6800 3250 6800
 Wire Wire Line
 	2700 6900 3350 6900
@@ -1462,7 +1444,7 @@ Wire Wire Line
 Wire Wire Line
 	950  7000 1700 7000
 Text HLabel 950  7000 0    50   Input ~ 0
-WRA#
+WRC#
 Text HLabel 1000 6100 0    50   Input ~ 0
 CLK
 Text HLabel 1000 5250 0    50   Input ~ 0
@@ -1521,4 +1503,16 @@ Text HLabel 8950 2450 1    50   Input ~ 0
 B6
 Text HLabel 9650 2450 1    50   Input ~ 0
 B7
+Text HLabel 950  6700 0    50   Input ~ 0
+REGC0
+Text HLabel 950  6800 0    50   Input ~ 0
+REGC1
+Wire Wire Line
+	1000 2200 3450 2200
+Wire Wire Line
+	1000 2100 3350 2100
+Wire Wire Line
+	950  6700 1700 6700
+Wire Wire Line
+	950  6800 1700 6800
 $EndSCHEMATC
