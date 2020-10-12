@@ -1,45 +1,57 @@
 // Receive buffer program for the microcontroller that sits on the
 // IO Expander Board for the ByteMachine.
 
-// The program is intended to run on an ATTINY44 with 8 Mhz (internal clock) 
-// and uses the following IO pins:
+// The program is intended to run on an ATTINY44 with approximate 
+// 8 MHz (internal clock) and uses the following IO pins:
+
 // Signal  Arduino pin  ATTINY pin
-//   RX              4           9
-//   RX2             2          11
-//   RTS             7           6
+//   RX             10     PB0 = 2         incomming UART data
+//   TX              9     PB1 = 3         outgoing UART data
+//   SS                                    SPI device select (active low)
+//   SCLK                                  SPI clock
+//   MOSI                                  SPI master out / slave in 
+//   MISO                                  SPI master in / slave out
 //
-// Serial transmission is at 9600 baud, 1 start, 1 stop, no parity 
-// Incomming data from RX will be buffered until the RTS input signal is low and then sent via RX2.
-// The receiver is required to wait one additional millisecond after seting RTS to high for data to
-// arrive.
+// Serial transmission dedaults to 9600 baud, 1 start, 1 stop, no parity 
+// Incomming data from RX will be buffered until received by the SPI master. Outgoing data from the
+// SPI master is buffered before transmitting to the UART.
 
-#include <avr/interrupt.h>
+#define RX   10
+#define TX    9
+#define SS   A3
+#define SCLK A4
+#define MOSI A6
+#define MISO A5
 
-
-#define RX 4
-#define RX2 2
-#define RTS 7
-#define DEBUG 6
+// communication between ISR and the main program
+volatile byte txdata;            
+volatile boolean txdatapresent;  // will be set by main program, cleared by ISR
+volatile byte rxdata;
+volatile boolean rxdatapresent;  // will be set by ISR, cleared by main program
 
 #define BUFFERSIZE 10
 volatile byte transferbuffer[BUFFERSIZE];
 volatile byte receivecursor;
 volatile byte transmitcursor;
 
-
 void setup() 
 {              
     noInterrupts(); 
      
-    // global variables
-    receivecursor=0;
-    transmitcursor=0;
+    // global communication variables
+    txdatapresent = false;
+    rxdatapresent = false;
 
     // pin setup
-    pinMode(RX, INPUT_PULLUP);
-    pinMode(RTS, INPUT_PULLUP);
-    pinMode(RX2, OUTPUT);
-    pinMode(DEBUG, OUTPUT);
+    digitalWrite(TX, HIGH);
+    pinMode(TX, OUTPUT);
+    pinMode(RX, INPUT);
+
+    pinMode(SS, INPUT);
+    pinMode(SCLK, INPUT);
+    pinMode(MOSI, INPUT);
+    digitalWrite(TX, HIGH);
+    pinMode(MISO, INPUT);
 
     // -- TIMER 1 register setup for CTC mode
     TCCR1A = 
@@ -51,9 +63,9 @@ void setup()
       0x08    // B00001000    // WGM3:2=1
     | 0x01;   // B00000001 ;  // clock source = full speed
 
-    // timer compare register to get approximately 9600 Hz
-    OCR1AH = 3;     // prepare high byte 
-    OCR1AL = 43;    // write to 16-bit register  
+    // timer compare register to get approximately 4x9600 Hz
+    OCR1AH = 0;     // prepare high byte 
+    OCR1AL = 207;    // write to 16-bit register  
  
     // enable timer 1 compare A interrupt 
     TIMSK1 = 0x02;  // B00000002;     
@@ -63,40 +75,95 @@ void setup()
     interrupts(); 
 }
 
+
+// main loop to handle the SPI protocol and control the ISR via the interface bytes. 
 void loop() 
 {
-  digitalWrite(DEBUG,LOW);
-  digitalWrite(DEBUG,HIGH);
-  /*
-    int c = mySerial.read();
-    // if anything received, put data in buffer
-    if (c>=0) 
-    {
-        byte nextcursor = (receivecursor+1 < BUFFERSIZE) ? (receivecursor+1) : 0;
-        // can only accept data if buffer is not full
-        if (nextcursor!=transmitcursor) 
-        {
-            transferbuffer[receivecursor] = (byte) c;
-            receivecursor=nextcursor;    
-        }
-    }
-    
-    // check if there is something to transmit and if we are allowed to send now
-    if (receivecursor!=transmitcursor
-    &&  digitalRead(RTS)==LOW)
-    {
-        mySerial.write(transferbuffer[transmitcursor]);
-        transmitcursor = (transmitcursor+1 < BUFFERSIZE) ? (transmitcursor+1) : 0;
-    }
-    */
-    
+//  if (txdatapresent);  // wait until outgoing data is consumed
+//  txdata = 'H';
+//  txdatapresent = true;    
+  
+    byte d;
+
+    while (!rxdatapresent); // wait for incomming data
+    d = rxdata;
+    rxdatapresent = false;
+
+    while (txdatapresent);  // wait until outgoing data is consumed
+    txdata = d;
+    txdatapresent = true;    
+    while (txdatapresent);  // wait until outgoing data is consumed
+    txdata = '!';
+    txdatapresent = true;    
 }
 
 
-// interrupt routine for sending bits (9600 Hz)
-//ISR(TIM1_OVF_vect)
+// internal variables exclusively for the ISR: 
+byte outsequence = 99;  
+byte outbyte = 0;
+byte insequence = 99;
+byte inbyte = 0;
+
+// interrupt routine for handling the UART side of things (polled at 4*9600 Hz)
 ISR(TIM1_COMPA_vect)
 {
-    digitalWrite(RX2, HIGH);
-    digitalWrite(RX2, LOW);
+    // read data at correct point in time
+    byte inport = PINB;
+    
+    // sequencing outgoing data including stop bit
+    if (outsequence<42)
+    {
+        if ((outsequence & 0x03) == 3)
+        {
+            if ( (outbyte&1) == 0)
+            {
+                PORTB = B0000000;
+            }
+            else
+            {
+                PORTB = B0000010;              
+            }
+            outbyte = (outbyte>>1 ) | B10000000;
+        }
+        outsequence++;
+    }
+    // check if new outgoing data is present
+    else if (txdatapresent)
+    {
+        outbyte = txdata;
+        txdatapresent = false;
+        outsequence = 0;
+        PORTB = B00000000;   // start bit
+    }
+
+    // sequencing incomming data 
+    if (insequence<36)
+    {
+        if ((insequence & 0x03) == 0)
+        {
+            if ((inport & B00000001) != 0)
+            {
+                inbyte = (inbyte >> 1) | B10000000;
+            }
+            else {
+                inbyte = (inbyte >> 1);
+            }
+            if (insequence==32)
+            {
+                rxdata = inbyte;
+                rxdatapresent = true;
+            }
+        }
+        insequence++;
+    }
+    // check if encountered new start bit
+    else if ( (inport & B00000001) == 0)
+    {
+        insequence = 0;      
+    }
+
+//    PORTB = B0000010;
+//    PORTB = B0000000;  
+//    digitalWrite(TX, HIGH);
+//    digitalWrite(TX, LOW);
 }
