@@ -4,13 +4,13 @@
 // The program is intended to run on an ATTINY44 with approximate 
 // 8 MHz (internal clock) and uses the following IO pins:
 
-// Signal  Arduino pin  ATTINY pin
+// Signal  Arduino pin   ATTINY port & pin
 //   RX             10     PB0 = 2         incomming UART data
 //   TX              9     PB1 = 3         outgoing UART data
-//   SS                                    SPI device select (active low)
-//   SCLK                                  SPI clock
-//   MOSI                                  SPI master out / slave in 
-//   MISO                                  SPI master in / slave out
+//   SS              3     PA3 = 10        SPI slave select (active low)
+//   SCK             4     PA4 = 9         SPI clock
+//   MISO            5     PA6 = 8         SPI master in / slave out
+//   MOSI            6     PA5 = 7         SPI master out / slave in 
 //
 // Serial transmission dedaults to 9600 baud, 1 start, 1 stop, no parity 
 // Incomming data from RX will be buffered until received by the SPI master. Outgoing data from the
@@ -18,40 +18,69 @@
 
 #define RX   10
 #define TX    9
-#define SS   A3
-#define SCLK A4
-#define MOSI A6
-#define MISO A5
+#define SS    3
+#define SCK   4
+#define MISO  5
+#define MOSI  6
 
-// communication between ISR and the main program
-volatile byte txdata;            
-volatile boolean txdatapresent;  // will be set by main program, cleared by ISR
-volatile byte rxdata;
-volatile boolean rxdatapresent;  // will be set by ISR, cleared by main program
+#define DEBUG
 
-#define BUFFERSIZE 10
-volatile byte transferbuffer[BUFFERSIZE];
-volatile byte receivecursor;
-volatile byte transmitcursor;
+// utility class to implement a first-in-first-out buffer
+class FIFO
+{
+private:
+    volatile byte buffer[64];
+    volatile byte writecursor;
+    volatile byte readcursor;
+public:
+    FIFO() 
+    { 
+        writecursor=0; 
+        readcursor=0; 
+    }      
+    byte size()
+    {
+        return (writecursor-readcursor) & 63;
+    }
+    byte space()
+    {
+        return 63 - size();
+    }
+    void append(byte x)
+    {
+        buffer[writecursor] = x;
+        writecursor = (writecursor+1) & 63;
+    }
+    byte first()
+    {
+        return buffer[readcursor];
+    }
+    void pop()
+    {
+        readcursor = (readcursor+1) & 63;
+    }
+};
 
+// communciation buffers between the ISR and the main program
+FIFO txbuffer;
+FIFO rxbuffer;
+
+
+// interrupts, timers and stuff
 void setup() 
 {              
     noInterrupts(); 
      
-    // global communication variables
-    txdatapresent = false;
-    rxdatapresent = false;
-
     // pin setup
     digitalWrite(TX, HIGH);
     pinMode(TX, OUTPUT);
     pinMode(RX, INPUT);
 
     pinMode(SS, INPUT);
-    pinMode(SCLK, INPUT);
+    pinMode(SCK, INPUT);
     pinMode(MOSI, INPUT);
-    digitalWrite(TX, HIGH);
-    pinMode(MISO, INPUT);
+    digitalWrite(MISO, HIGH);
+    pinMode(MISO, OUTPUT);
 
     // -- TIMER 1 register setup for CTC mode
     TCCR1A = 
@@ -72,31 +101,85 @@ void setup()
     // disable other timer interrupts
     TIMSK0 = 0x00;
 
+    // configure universal serial interface
+    USICR = B00010000   // three-wire mode
+        |   B00001000;  // sample on positive clock edge
+
     interrupts(); 
 }
 
+#define CHIP_IDLE ((PINA & B00001000) != 0)
 
-// main loop to handle the SPI protocol and control the ISR via the interface bytes. 
+// main loop to handle the SPI protocol and communicate with the ISR via the transmission buffers. 
 void loop() 
 {
-//  if (txdatapresent);  // wait until outgoing data is consumed
-//  txdata = 'H';
-//  txdatapresent = true;    
-  
     byte d;
+    
+    // wait for SS to become active 
+    while (CHIP_IDLE); 
+    
+    // compute how much data is available and how much can be accepted
+    byte canaccept = txbuffer.space();
+    if (canaccept>15) { canaccept = 15; }
+    byte cansend = rxbuffer.size();
+    if (cansend>15) { cansend=15; }
 
-    while (!rxdatapresent); // wait for incomming data
-    d = rxdata;
-    rxdatapresent = false;
+    // prepare first SPI answer byte  and reset shift register status
+    USIDR = (canaccept<<4) | cansend;
+    USISR = B01000000;  
+    
+    // wait until a whole byte is transmitted, but terminate if SS is released
+    while ((USISR & B01000000) == 0) { if (CHIP_IDLE) return; }            
 
-    while (txdatapresent);  // wait until outgoing data is consumed
-    txdata = d;
-    txdatapresent = true;    
-    while (txdatapresent);  // wait until outgoing data is consumed
-    txdata = '!';
-    txdatapresent = true;    
+    // fetch command byte 
+    d = USIDR;
+    
+    // process command    
+    if (d=='R')   // master wants to receive
+    {
+        USIDR = rxbuffer.first();
+        USISR = B01000000;
+        for (;;)
+        {
+            // we don't known how many bytes (if any) the master wants to receive, so do not delete data yet 
+            // wait until a whole byte is transmitted, but terminate if SS was released in the meantime
+            while ((USISR & B01000000) == 0) { if (CHIP_IDLE) return; }            
+
+            // quickyl re-charge the USI facility
+            USIDR = rxbuffer.first();
+            USISR = B01000000;
+                        
+            // the server has consumed the byte - so can discard it
+            if (rxbuffer.size()>0)
+            { 
+                rxbuffer.pop();
+            }
+        }
+    }
+    else if (d=='S')  // master wants to send
+    {
+        USIDR = 0;
+        USISR = B01000000;
+        for (;;)
+        {
+            // wait until a whole byte is transmitted, but terminate if SS was released in the meantime
+            while ((USISR & B01000000) == 0) { if (CHIP_IDLE) return; }            
+            
+            // fetch the byte to transmit and re-charge the shift register
+            d = USIDR;
+            USIDR = 0;  
+            USISR = B01000000;
+            
+            if (txbuffer.space()>0)
+            {
+                txbuffer.append(d);
+            }
+        }
+    }  
+
+    // unknown command - wait until SS is de-asserted
+    while (!CHIP_IDLE);            
 }
-
 
 // internal variables exclusively for the ISR: 
 byte outsequence = 99;  
@@ -106,8 +189,8 @@ byte inbyte = 0;
 
 // interrupt routine for handling the UART side of things (polled at 4*9600 Hz)
 ISR(TIM1_COMPA_vect)
-{
-    // read data at correct point in time
+{ 
+    // read data at precise point in time
     byte inport = PINB;
     
     // sequencing outgoing data including stop bit
@@ -128,10 +211,10 @@ ISR(TIM1_COMPA_vect)
         outsequence++;
     }
     // check if new outgoing data is present
-    else if (txdatapresent)
+    else if (txbuffer.size()>0)
     {
-        outbyte = txdata;
-        txdatapresent = false;
+        outbyte = txbuffer.first();
+        txbuffer.pop();
         outsequence = 0;
         PORTB = B00000000;   // start bit
     }
@@ -150,8 +233,10 @@ ISR(TIM1_COMPA_vect)
             }
             if (insequence==32)
             {
-                rxdata = inbyte;
-                rxdatapresent = true;
+                if (rxbuffer.space()>0)
+                {
+                    rxbuffer.append(inbyte);
+                }
             }
         }
         insequence++;
@@ -161,9 +246,4 @@ ISR(TIM1_COMPA_vect)
     {
         insequence = 0;      
     }
-
-//    PORTB = B0000010;
-//    PORTB = B0000000;  
-//    digitalWrite(TX, HIGH);
-//    digitalWrite(TX, LOW);
 }
