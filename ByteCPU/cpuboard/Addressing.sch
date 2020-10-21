@@ -649,10 +649,6 @@ Wire Wire Line
 Wire Wire Line
 	10700 4250 10700 3800
 Connection ~ 8950 4250
-Text Label 3150 6250 0    50   ~ 0
-LOADHIGH#
-Text Label 3150 6800 0    50   ~ 0
-COUNT
 Wire Wire Line
 	3650 5700 5400 5700
 Wire Wire Line
@@ -687,17 +683,6 @@ Wire Wire Line
 Connection ~ 8450 5800
 Wire Wire Line
 	8450 5800 8450 3800
-Text Label 3150 5800 0    50   ~ 0
-LOADLOW#
-Wire Wire Line
-	1900 1150 1750 1150
-Wire Wire Line
-	1750 1150 1750 1050
-Wire Wire Line
-	1750 1150 1750 1250
-Connection ~ 1750 1150
-Text HLabel 1150 800  1    50   Input ~ 0
-AD15#
 Text HLabel 9700 750  1    50   Input ~ 0
 AD0
 Text HLabel 10300 750  1    50   Input ~ 0
@@ -730,14 +715,10 @@ Text HLabel 3050 750  1    50   Input ~ 0
 AD14
 Text HLabel 2450 750  1    50   Input ~ 0
 AD15
-Wire Wire Line
-	2450 750  1900 750 
-Wire Wire Line
-	1900 750  1900 1150
-Text HLabel 850  5900 0    50   Input ~ 0
-PCOP0
-Text HLabel 850  5800 0    50   Input ~ 0
-PCOP1
+Text HLabel 1050 5700 0    50   Input ~ 0
+LOADHIGH#
+Text HLabel 1050 5800 0    50   Input ~ 0
+LOADLOW#
 Text HLabel 850  4700 0    50   Input ~ 0
 B0
 Text HLabel 850  4800 0    50   Input ~ 0
@@ -781,88 +762,12 @@ Text HLabel 850  1850 0    50   Input ~ 0
 SELPC
 Wire Wire Line
 	3650 3800 3650 5700
-Wire Wire Line
-	3750 5600 5500 5600
-Wire Wire Line
-	8450 5800 1200 5800
-Connection ~ 1200 5800
-Wire Wire Line
-	1200 5800 850  5800
 Connection ~ 3650 5700
-Wire Wire Line
-	3650 6250 3650 5700
-Wire Wire Line
-	3750 6800 3750 5600
 Connection ~ 3750 5600
 Wire Wire Line
 	10200 3800 10200 5800
 Wire Wire Line
 	10300 3800 10300 5600
-Wire Wire Line
-	850  5900 1050 5900
-Wire Wire Line
-	1150 800  1150 1150
-Wire Wire Line
-	1050 5900 1050 6350
-Wire Wire Line
-	1200 5800 1200 6150
-$Comp
-L 74xx:74LS08 U?
-U 4 1 5F89D36A
-P 2300 6800
-AR Path="/6088908D/5F89D36A" Ref="U?"  Part="4" 
-AR Path="/60888F9A/5F89D36A" Ref="U3"  Part="4" 
-F 0 "U3" H 2300 7000 50  0000 C CNN
-F 1 "74HC08" H 2550 6950 50  0000 C CNN
-F 2 "" H 2300 6800 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS08" H 2300 6800 50  0001 C CNN
-	4    2300 6800
-	1    0    0    -1  
-$EndComp
-$Comp
-L 74xx:74HC00 U?
-U 4 1 5F89D371
-P 1450 1150
-AR Path="/6088908D/5F89D371" Ref="U?"  Part="4" 
-AR Path="/60888F9A/5F89D371" Ref="U0"  Part="4" 
-F 0 "U0" H 1550 1350 50  0000 R CNN
-F 1 "74HC00" H 1900 1300 50  0000 R CNN
-F 2 "" H 1450 1150 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74hc00" H 1450 1150 50  0001 C CNN
-	4    1450 1150
-	-1   0    0    1   
-$EndComp
-Wire Wire Line
-	2600 6250 3650 6250
-Wire Wire Line
-	2000 6150 1200 6150
-Connection ~ 1200 6150
-Wire Wire Line
-	1200 6150 1200 6700
-Wire Wire Line
-	2000 6350 1050 6350
-Connection ~ 1050 6350
-Wire Wire Line
-	2600 6800 3750 6800
-Wire Wire Line
-	2000 6700 1200 6700
-Wire Wire Line
-	2000 6900 1050 6900
-Wire Wire Line
-	1050 6350 1050 6900
-$Comp
-L 74xx:74LS32 U?
-U 4 1 5F98A04B
-P 2300 6250
-AR Path="/6088908D/5F98A04B" Ref="U?"  Part="4" 
-AR Path="/60888F9A/5F98A04B" Ref="U2"  Part="4" 
-F 0 "U2" H 2300 6575 50  0000 C CNN
-F 1 "74HC32" H 2300 6484 50  0000 C CNN
-F 2 "" H 2300 6250 50  0001 C CNN
-F 3 "http://www.ti.com/lit/gpn/sn74LS32" H 2300 6250 50  0001 C CNN
-	4    2300 6250
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	9800 1750 9800 2450
 Wire Wire Line
@@ -1025,4 +930,14 @@ Wire Wire Line
 	7050 2200 8150 2200
 Wire Wire Line
 	8150 1750 8150 2200
+Wire Wire Line
+	1050 5800 8450 5800
+Text HLabel 1050 5600 0    50   Input ~ 0
+COUNT
+Wire Wire Line
+	1050 5600 3750 5600
+Wire Wire Line
+	1050 5700 3650 5700
+Wire Wire Line
+	3750 5600 5500 5600
 $EndSCHEMATC
