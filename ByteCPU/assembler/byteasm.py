@@ -41,7 +41,8 @@ def evaluate(identifiers, s):
         elif len(s)>0 and s[0]=='^': 
             return (evaluate(identifiers, s[1:]) >> 8) & 0xff
         elif len(s)>0 and s[0]=='$':
-            return int(s[1:],16)
+            v = int(s[1:],16)
+            return v
         else:
             return int(s,10)
     except ValueError as e:
@@ -95,19 +96,19 @@ def processline(identifiers, generate, tokens, codeaddress):
     bytes = []
     if len(tokens)==0:
         pass
-    elif len(tokens)==2 and tokens[1]==":":
+    elif len(tokens)>=2 and tokens[1]==":":
         if not generate:
             id = tokens[0]
             if id in identifiers:
-                raise AssemblerException("May not redefine '"+id+"'")#
+                raise AssemblerException("May not redefine '"+id+"'")
             else:
                 identifiers[id] = codeaddress[0]
-    elif len(tokens)==3 and tokens[1]=='=':
+    elif len(tokens)>=3 and tokens[1]=='=':
         if not generate:
             id = tokens[0]
-            value = op(I,G,T, 2, 16);
+            value = evaluate(I,tokens[2])
             if id in identifiers:
-                raise AssemblerException("May not redefine '"+id+"'")#
+                raise AssemblerException("May not redefine '"+id+"'")
             else:
                 identifiers[id] = value
     elif len(tokens)==2 and tokens[0]=="ORG":
@@ -124,7 +125,7 @@ def processline(identifiers, generate, tokens, codeaddress):
     elif tokens[0]=="DP":
         bytes = [ 0x30 | reg(T, 1, 2) ]
     elif tokens[0]=="JMP":
-        bytes = [ 0x40 | reg(T, 1, 0) , op(T, 2, 2) ]
+        bytes = [ 0x40 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="BGE":
         bytes = [ 0x70 | reg(T, 1, 0) | reg(T, 2, 2) , op(I,G,T, 3, 8) ]
     elif tokens[0]=="BLE":

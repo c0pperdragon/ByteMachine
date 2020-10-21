@@ -3,8 +3,8 @@
 ; address space layout
 ROM = $0000
 RAM = $8000
-COUNTER = $8000
-DUMMY = $8001
+COUNTER = $8001
+DUMMY = $8002
 
 
     ORG $0000     
@@ -15,6 +15,10 @@ MAIN:
     SET R0 .COUNTER
     SET R1 0
     ST R1 R0
+    ; test initial jump instruction
+    SET R0 .LOOP
+    SET R1 ^LOOP
+    JMP R0 R1
     
 LOOP:
     ; increment COUNTER up to 15 and then wrap back to 0
@@ -30,7 +34,8 @@ LOOP:
     SET R3 ^PATTERN
     DP R3
     SET R1 .PATTERN
-    LD R2 R1
+    ADD R2 R1
+    LD R2 R2
     
     ; write pattern to ROM range to hit the output port 
     ST R2 R1
@@ -43,7 +48,7 @@ LOOP:
     
     ; delay loop
     SET R3 1
-    SET R0 60
+    SET R0 30
 L1:
     SET R1 100
 L2:
@@ -57,9 +62,10 @@ L3 :
     BGE R0 R3 .L1
     
     ; start over
-    BRA .LOOP
+    SET R0 .LOOP
+    SET R1 ^LOOP
+    JMP R0 R1
     
-    ORG $0100
 PATTERN:
     BYTE $80 $C0 $60 $30 $18 $0C $06 $03 
     BYTE $01 $03 $06 $0C $18 $30 $60 $C0
