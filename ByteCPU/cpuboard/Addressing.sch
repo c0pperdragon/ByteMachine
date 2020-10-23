@@ -654,8 +654,6 @@ Wire Wire Line
 Wire Wire Line
 	5400 5700 5400 3800
 Wire Wire Line
-	3750 3800 3750 5600
-Wire Wire Line
 	5500 5600 5500 3800
 Wire Wire Line
 	8550 5600 8550 3800
@@ -763,7 +761,6 @@ SELPC
 Wire Wire Line
 	3650 3800 3650 5700
 Connection ~ 3650 5700
-Connection ~ 3750 5600
 Wire Wire Line
 	10200 3800 10200 5800
 Wire Wire Line
@@ -931,13 +928,68 @@ Wire Wire Line
 Wire Wire Line
 	8150 1750 8150 2200
 Wire Wire Line
-	1050 5800 8450 5800
+	1050 5800 1750 5800
 Text HLabel 1050 5600 0    50   Input ~ 0
 COUNT
 Wire Wire Line
-	1050 5600 3750 5600
+	1050 5600 2000 5600
 Wire Wire Line
 	1050 5700 3650 5700
 Wire Wire Line
 	3750 5600 5500 5600
+$Comp
+L 74xx:7400 U?
+U 3 1 5FBA4C03
+P 2400 6400
+AR Path="/5FBA4C03" Ref="U?"  Part="3" 
+AR Path="/60888F9A/5FBA4C03" Ref="U1"  Part="3" 
+F 0 "U1" H 2400 6725 50  0000 C CNN
+F 1 "7400" H 2400 6634 50  0000 C CNN
+F 2 "" H 2400 6400 50  0001 C CNN
+F 3 "http://www.ti.com/lit/gpn/sn7400" H 2400 6400 50  0001 C CNN
+	3    2400 6400
+	1    0    0    -1  
+$EndComp
+$Comp
+L 74xx:7400 U?
+U 4 1 5FBA4C16
+P 3150 6400
+AR Path="/5FBA4C16" Ref="U?"  Part="4" 
+AR Path="/60888F9A/5FBA4C16" Ref="U1"  Part="4" 
+F 0 "U1" H 3350 6650 50  0000 C CNN
+F 1 "7400" H 3350 6550 50  0000 C CNN
+F 2 "" H 3150 6400 50  0001 C CNN
+F 3 "http://www.ti.com/lit/gpn/sn7400" H 3150 6400 50  0001 C CNN
+	4    3150 6400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2100 6300 2000 6300
+Wire Wire Line
+	2000 6300 2000 5600
+Connection ~ 2000 5600
+Wire Wire Line
+	2000 5600 3750 5600
+Wire Wire Line
+	2100 6500 1750 6500
+Wire Wire Line
+	1750 6500 1750 5800
+Connection ~ 1750 5800
+Wire Wire Line
+	1750 5800 8450 5800
+Wire Wire Line
+	2750 6300 2850 6300
+Wire Wire Line
+	2750 6500 2850 6500
+Wire Wire Line
+	3750 6400 3450 6400
+Wire Wire Line
+	3750 3800 3750 6400
+Wire Wire Line
+	2750 6300 2750 6400
+Wire Wire Line
+	2700 6400 2750 6400
+Connection ~ 2750 6400
+Wire Wire Line
+	2750 6400 2750 6500
 $EndSCHEMATC
