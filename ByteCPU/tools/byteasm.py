@@ -116,38 +116,38 @@ def processline(identifiers, generate, tokens, codeaddress):
     elif tokens[0]=="BYTE":
         for idx in range(1,len(tokens)):
             bytes.append(op(I,G,T, idx, 8))
-    elif tokens[0]=="ST":
+    elif tokens[0]=="GT":
         bytes = [ 0x00 | reg(T, 1, 0) | reg(T, 2, 2) ]
-    elif tokens[0]=="LD":
-        bytes = [ 0x10 | reg(T, 1, 0) | reg(T, 2, 2) ]
-    elif tokens[0]=="SET":
-        bytes = [ 0x20 | reg(T, 1, 0) , op(I,G,T, 2, 8) ]
-    elif tokens[0]=="DP":
-        bytes = [ 0x30 | reg(T, 1, 2) ]
-    elif tokens[0]=="JMP":
-        bytes = [ 0x40 | reg(T, 1, 0) | reg(T, 2, 2) ]
-    elif tokens[0]=="BGE":
-        bytes = [ 0x70 | reg(T, 1, 0) | reg(T, 2, 2) , op(I,G,T, 3, 8) ]
-    elif tokens[0]=="BLE":
-        bytes = [ 0x70 | reg(T, 1, 2) | reg(T, 2, 0) , op(I,G,T, 3, 8) ]
-    elif tokens[0]=="BRA":
-        bytes = [ 0x70 , op(I,G,T, 1, 8) ]
     elif tokens[0]=="ADD":
-        bytes = [ 0x80 | reg(T, 1, 0) | reg(T, 2, 2) ]
+        bytes = [ 0x10 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="SUB":
-        bytes = [ 0x90 | reg(T, 1, 0) | reg(T, 2, 2) ]
+        bytes = [ 0x20 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="MUL":
-        bytes = [ 0xA0 | reg(T, 1, 0) | reg(T, 2, 2) ]
+        bytes = [ 0x30 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="DIV":
-        bytes = [ 0xB0 | reg(T, 1, 0) | reg(T, 2, 2)]
+        bytes = [ 0x40 | reg(T, 1, 0) | reg(T, 2, 2)]
     elif tokens[0]=="AND":
-        bytes = [ 0xC0 | reg(T, 1, 0) | reg(T, 2, 2) ]
+        bytes = [ 0x50 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="OR":
-        bytes = [ 0xD0 | reg(T, 1, 0) | reg(T, 2, 2) ]
+        bytes = [ 0x60 | reg(T, 1, 0) | reg(T, 2, 2) ]
     elif tokens[0]=="XOR":
-        bytes = [ 0xE0 | reg(T, 1, 0) | reg(T, 2, 2) ]
-    elif tokens[0]=="LT":
-        bytes = [ 0xF0 | reg(T, 1, 0) | reg(T, 2, 2) ]
+        bytes = [ 0x70 | reg(T, 1, 0) | reg(T, 2, 2) ]
+    elif tokens[0]=="BLE":
+        bytes = [ 0x80 | reg(T, 1, 0) | reg(T, 2, 2) , op(I,G,T, 3, 8) ]
+    elif tokens[0]=="BGE":
+        bytes = [ 0x80 | reg(T, 1, 2) | reg(T, 2, 0) , op(I,G,T, 3, 8) ]
+    elif tokens[0]=="BRA":
+        bytes = [ 0x80 , op(I,G,T, 1, 8) ]
+    elif tokens[0]=="JMP":
+        bytes = [ 0x90 | reg(T, 1, 0) | reg(T, 2, 2) ]
+    elif tokens[0]=="DP":
+        bytes = [ 0xA0 | reg(T, 1, 2) ]
+    elif tokens[0]=="SET":
+        bytes = [ 0xB0 | reg(T, 1, 0) , op(I,G,T, 2, 8) ]
+    elif tokens[0]=="LD":
+        bytes = [ 0xC0 | reg(T, 1, 0) | reg(T, 2, 2) ]
+    elif tokens[0]=="ST":
+        bytes = [ 0xD0 | reg(T, 1, 0) | reg(T, 2, 2) ]
     else:
         raise AssemblerException("Unknown instruction "+tokens[0])     
 

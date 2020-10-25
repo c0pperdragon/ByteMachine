@@ -43,25 +43,33 @@ the lower 4 bits may specify parameters. So there are 16 possible instructions. 
 have an additonal byte as immediate operand.
 Digits denoted with R are reserved and should be set to 0 for upward compatibility.
 
-    0000yyxx             ST xx yy
-        Transfer content of register xx to the memory location pointed to by register yy. The high 8 bits
-        of the address are taken from DP.
+    0000yyxx            GT xx yy
+        Compare xx and yy and if xx contains a greater value, store 1 in xx. Otherwise store 0.
 
-    0001yyxx             LD xx yy
-        Load the data from the memory location pointed to by register yy and copy it into xx.
+    0001yyxx            ADD xx yy
+        Add register yy to register xx, store in xx.
+     
+    0010yyxx            SUB xx yy
+        Subtract register yy from register xx, store in xx.
+        
+    0011yyxx            MUL xx yy
+        Multiply registers xx and yy and store in xx.
+        
+    0100yyxx            DIV xx yy
+        Divide xx by yy and store in xx.
+   
+    0101yyxx            AND xx yy
+        Bitwise AND of xx and yy. store in xx.
+   
+    0110yyxx            OR xx yy
+        Bitwise OR of xx and yy. store in xx.
+   
+    0111yyxx            XOR xx yy
+        Bitwise XOR of xx and yy. store in xx.
+   
 
-    0010RRxx immediate   SET xx immediate
-        Two-byte instruction. Take the byte after the opcode and store in register xx.
-
-    0011yyRR             DP yy
-        Transfer content of register yy into the data page register.
-
-    0100yyxx             JMP xx yy 
-        Jump to the location specified by the register xx (low bits) and the register yy
-        (high bits)
-
-    0111yyxx immediate   BGE xx yy target 
-        Branch if register xx is greater or equal to register yy.
+    1000yyxx immediate   BLE xx yy target 
+        Branch if register xx is less or equal to register yy.
         This instruction has an immediate operand that specifies the 
         low 8 bits of the address to be jumped to if the specified condition is met. The high
         8 bits of the program counter will not change when branching. So basically it is not possible
@@ -70,28 +78,20 @@ Digits denoted with R are reserved and should be set to 0 for upward compatibili
         By choosing the right registers, this instruction can also be used as BLE, as well to branch
         always, when using the same register twice.
 
-     1000yyxx            ADD xx yy
-        Add register yy to register xx, store in xx.
-     
-     1001yyxx            SUB xx yy
-        Subtract register yy from register xx, store in xx.
+    1001yyxx             JMP xx yy 
+        Jump to the location specified by the register xx (low bits) and the register yy
+        (high bits)
+
+    1010yyRR             DP yy
+        Transfer content of register yy into the data page register.
+
+    1011RRxx immediate   SET xx immediate
+        Two-byte instruction. Take the byte after the opcode and store in register xx.
+
+    1100yyxx             LD xx yy
+        Load the data from the memory location pointed to by register yy and copy it into xx.
         
-     1010yyxx            MUL xx yy
-        Multiply registers xx and yy and store in xx.
-        
-     1011yyxx            DIV xx yy
-        Divide xx by yy and store in xx.
-   
-     1100yyxx            AND xx yy
-        Bitwise AND of xx and yy. store in xx.
-   
-     1101yyxx            OR xx yy
-        Bitwise OR of xx and yy. store in xx.
-   
-     1110yyxx            XOR xx yy
-        Bitwise XOR of xx and yy. store in xx.
-   
-     1111yyxx            LT xx yy
-        Compare xx and yy and if xx contains a lower value, store 1 in xx. Otherwise store 0.
-   
-   
+    1101yyxx             ST xx yy
+        Transfer content of register xx to the memory location pointed to by register yy. The high 8 bits
+        of the address are taken from DP.
+

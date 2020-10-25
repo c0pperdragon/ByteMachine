@@ -2,22 +2,22 @@
 # The address bits are quite shuffeled up to match the physical pin layout
 
 def op(o,a,b):
-    if o==0:
-        return (a+b) & 0xff
-    elif o==1:
-        return (a+256-b) & 0xff
-    elif o==2:
-        return (a*b) & 0xff
-    elif o==3 and b!=0:
-        return int(a/b) 
-    elif o==4:
-        return a & b 
-    elif o==5:
-        return a | b 
-    elif o==6:
-        return a ^ b
-    elif o==7 and a<b:
+    if o==0 and a>b:
         return 1
+    elif o==1:
+        return (a+b) & 0xff
+    elif o==2:
+        return (a+256-b) & 0xff
+    elif o==3:
+        return (a*b) & 0xff
+    elif o==4 and b!=0:
+        return int(a/b) 
+    elif o==5:
+        return a & b 
+    elif o==6:
+        return a | b 
+    elif o==7:
+        return a ^ b
     else:
         return 0
 

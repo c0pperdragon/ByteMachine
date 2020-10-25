@@ -351,7 +351,7 @@ OP1
 Text HLabel 1250 4300 0    50   Input ~ 0
 OP2
 Text HLabel 1250 6450 0    50   Input ~ 0
-SELALU#
+SELMEM
 Text HLabel 6100 6000 3    50   Input ~ 0
 D0
 Text HLabel 6000 6000 3    50   Input ~ 0
