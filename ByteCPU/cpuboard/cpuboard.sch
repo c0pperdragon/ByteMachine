@@ -957,5 +957,4 @@ F 3 "~" H 950 650 50  0001 C CNN
 	1    950  650 
 	0    1    -1   0   
 $EndComp
-Connection ~ 3550 2050
 $EndSCHEMATC
