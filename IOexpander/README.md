@@ -4,7 +4,7 @@ To allow more sophisticated communication with the outside world than just blink
 a small IO board can be attached to the headers of the IO area. This boards provides two serial communication
 ports and one SDcard socket.
 
-![alt text](ioxpander.jpg "IO expander on home-etched board")
+![alt text](ioexpander.jpg "IO expander on home-etched board")
 
 
 ## Serial ports
