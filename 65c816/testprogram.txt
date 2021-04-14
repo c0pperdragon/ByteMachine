@@ -41,10 +41,9 @@
           
 ; Bootstrap code to switch to native mode that can access all RAM and all ROM.
 ; While in emulation mode, this data will also be reached via bank 0 (000000 - 00FFFF) instead of RAM
-80FFF0 5C F4 FF 80    JMP $80FFF4      ; jump to native mode ROM area 
-80FFF4 18             CLC     
-80FFF5 FB             XCE              ; turn off emulation mode (X and M flags are still 1)
-80FFF6 5C 00 FF 80    JMP $80FF00      ; start user program
-80FFFA FF
-80FFFB FF
-80FFFC F0 FF                           ; reset vector is pointing to bank 0
+80FFF0 18             CLC     
+80FFF1 FB             XCE              ; turn off emulation mode (X and M flags are still 1)
+80FFF2 5C 00 FF 80    JMP $80FF00      ; start user program
+80FFF6 FF FF
+80FFF8 5C F0 FF 80    JMP $80FFF0      ; first instruction after reset -> jump to native mode ROM area 
+80FFFC F8 FF                           ; reset vector is pointing to the initial long jump in bank 0
