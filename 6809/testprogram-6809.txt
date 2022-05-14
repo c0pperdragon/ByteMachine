@@ -1,0 +1,44 @@
+; Small test program to use various aspects of the ByteMachine with a Motorola 6809 CPU.
+; (You can also use a Hitachi 6309P CPU instead of 6809)
+; It is small enough so that I do not even use an assembler.
+; The program tries to use different parts of the ROM and different parts of the RAM for read and write.
+; It also accesses the input and the output port to check if all bits are working.
+; The output LEDs will play an animation which should look familiar to anyone who knows the 
+; 80ths TV show "Knight Rider".
+
+f000 80 C0 68 09 63 09 68 09 63 09 06 0C 18 30 60 C0  ; pattern sequence
+
+
+f100 10ce    7ff0    LDS   #$7ff0      ; init stack pointer
+f104              .l0
+f104   8e    f000    LDX   #tab
+f107              .l1
+f107   a6 80         LDA   ,X+         ; fetch output pattern from low ROM
+f109   b7    8800    STA   SBC_LED     ; write pattern to SBC LED port (for test on 6809 kit)
+
+f10c   b7    bbbb    STA   $BBBB       ; write pattern to output port (switches to IO mode)
+f10f   b4    5555    ANDA  $5555       ; read IO port and modify output pattern
+f112   b7    bbbb    STA   $BBBB       ; write modified pattern to output port
+f115   97      01    STA   $01         ; dummy write to RAM to disable IO mode
+
+f117   86      01    LDA   #1          ; count 5
+f119 108e    0000    LDY   #0          ; count 65536
+f11d              .l2
+f11d   31 3f         LEAY  -1,Y        ; decrement Y
+f11f   26      fc    BNE   .l2
+f121   4a            DECA
+f122   26      f9    BNE   .l2
+
+f124   8c    f010    CMPX  #tab_e
+f127   2d      de    BLT   .l1
+f129   20      d9    BRA   .l0
+
+
+fff0 f100            FDB   _reset    ; fff0 : trap on 6309
+fff2 f100            FDB   _reset    ; fff2 : SWI3
+fff4 f100            FDB   _reset    ; fff4 : SWI2
+fff6 f100            FDB   _vfirq    ; fff6 : FIRQ
+fff8 f100            FDB   _virq     ; fff8 : IRQ
+fffa f100            FDB   _swi_serv ; fffa : SWI
+fffc f100            FDB   _vnmi     ; fffc : NMI
+fffe f100            FDB   _reset    ; fffe : RESET
