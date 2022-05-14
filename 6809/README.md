@@ -13,7 +13,7 @@ setup is able to run at 12Mhz (3MHz CPU - 63C09) without any issue.
 The schematic diagram (6809board.pdf) is designed to directly show the breadboard layout. The connections of some bus lines
 are only shown by their designators to avoid too much clutter in the diagram.
 
-![alt text](breadboard6309.jpg "Breadboard before connecting to the main board")
+![alt text](br6809pcb.jpg "Dedicated PCB build")
 
 ## Control signal generation
 
