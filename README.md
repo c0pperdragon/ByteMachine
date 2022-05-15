@@ -23,7 +23,7 @@ Currently I have built and tested setups for the following CPUs:
 * [Z84C00](z84c00)
 * [i8088](i8088)
 
-Another user has provided me with all documention for this setup:
+User [oe7twj](https://github.com/oe7twj) has provided me with all documention for this own setup:
 * [6809](6809)
 
 ![alt text](testassembly.jpg "ByteMachine running with a 65C02")
